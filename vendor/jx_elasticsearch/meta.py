@@ -1191,7 +1191,7 @@ class Schema(jx_base.Schema):
             if startswith_field(p[0], query_path) or startswith_field(query_path, p[0])
         ]
         output = OrderedDict((p, []) for p in arm)
-        search_order = self.query_path + arm[len(self.query_path) :]
+        search_order = self.query_path + list(reversed(arm[:-len(self.query_path)]))
 
         if column_name == "_id":
             for c in columns:
@@ -1211,6 +1211,19 @@ class Schema(jx_base.Schema):
                     return output
             return output
 
+        if clean_name in [untype_path(a) for a in arm]:
+            # column_name IS A BRANCH-POINT ON AN ARM OF THE SNOWFLAKE
+            for path in search_order:
+                full_path = untype_path(concat_field(path, column_name))
+                for c in columns:
+                    if (
+                        c.jx_type == NESTED
+                        and untype_path(c.name) == full_path
+                    ):
+                        return {c.nested_path[0]: [c]}
+            Log.error("not expected")
+
+        # WE HAVE A column_name TO WORK WITH
         for path in search_order:
             full_path = untype_path(concat_field(path, column_name))
             found = False

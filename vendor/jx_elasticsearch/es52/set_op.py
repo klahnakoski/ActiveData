@@ -23,7 +23,7 @@ from jx_elasticsearch.es52.expressions import (
     NestedOp,
     ESSelectOp,
 )
-from jx_elasticsearch.es52.expressions.utils import setop_to_es_queries, pre_process
+from jx_elasticsearch.es52.expressions.utils import setop_to_es_queries, pre_process, ES52
 from jx_elasticsearch.es52.painless import Painless
 from jx_elasticsearch.es52.set_format import set_formatters
 from jx_elasticsearch.es52.util import jx_sort_to_es_sort
@@ -246,12 +246,28 @@ def get_selects(query):
                 continue
 
             split_variable = schema.split_values(select.value.var, exclude_type=PRIMITIVE)
+            if all(not v for v in split_variable.values()):
+                new_select.append({
+                    "name": select.name,
+                    "value": NULL,
+                    "put": {"name": select.name, "index": put_index, "child": "."},
+                    "pull": NULL,
+                })
+                put_index += 1
+
             for nesting, selected_columns in split_variable.items():
                 for selected_column in selected_columns:
-                    leaves = schema.split_leaves(
-                        selected_column, exclude_type=(EXISTS, OBJECT)
-                    )
+                    if len(selected_column.nested_path) > query_level:
+                        # WE ARE PULLING THE SOURCE FOR THIS
+                        leaves = [selected_column]
+                    else:
+                        leaves = schema.split_leaves(
+                            selected_column,
+                            exclude_type=(EXISTS, OBJECT)
+                        )
                     for leaf in leaves:
+                        if leaf.es_column in schema.query_path:
+                            continue
                         if leaf.jx_type == NESTED:
                             new_select.append({
                                 "name": select.name,
@@ -471,5 +487,5 @@ def es_query_proto(selects, op, wheres, schema):
         select = selects.get(p, Null)
 
         es_where = op([es_query, where])
-        es_query = NestedOp(path=Variable(p), query=es_where, select=select)
-    return es_query.partial_eval(lang).to_es(schema)
+        es_query = NestedOp(path=Variable(p), select=select, where=es_where)
+    return es_query.partial_eval(ES52).to_es(schema)

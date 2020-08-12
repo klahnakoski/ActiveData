@@ -756,10 +756,10 @@ class TestSetOps(BaseTestCase):
             },
             "expecting_list": {
                 "meta": {"format": "list"}, "data": [
-                    {"a.b": 0, "a.c": 0},
-                    {"a.b": 0, "a.c": 1},
-                    {"a.b": 1, "a.c": 0},
-                    {"a.b": 1, "a.c": 1}
+                    {"a": {"b": 0, "c": 0}},
+                    {"a": {"b": 0, "c": 1}},
+                    {"a": {"b": 1, "c": 0}},
+                    {"a": {"b": 1, "c": 1}},
             ]},
             "expecting_table": {
                 "meta": {"format": "table"},
@@ -907,9 +907,9 @@ class TestSetOps(BaseTestCase):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"a.b": "x", "a.v": 2},
-                    {"a.b": "x", "a.v": 5},
-                    {"a.b": "x", "a.v": 7},
+                    {"a": {"b": "x", "v": 2}},
+                    {"a": {"b": "x", "v": 5}},
+                    {"a": {"b": "x", "v": 7}},
                     {}
                 ]
             },
@@ -1072,9 +1072,9 @@ class TestSetOps(BaseTestCase):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"o": 3, "a.b": "x", "a.v": 2},
-                    {"o": 1, "a.b": "x", "a.v": 5},
-                    {"o": 2, "a.b": "x", "a.v": 7},
+                    {"o": 3, "a": {"b": "x", "v": 2}},
+                    {"o": 1, "a": {"b": "x", "v": 5}},
+                    {"o": 2, "a": {"b": "x", "v": 7}},
                     {"o": 4}
                 ]
             },
