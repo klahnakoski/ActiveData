@@ -214,7 +214,7 @@ def get_selects(query):
                         selected_column, exclude_type=(OBJECT, EXISTS)
                     )
                     for leaf in leaves:
-                        if leaf.es_column in schema.query_path:
+                        if leaf.jx_type == NESTED and leaf.es_column in schema.query_path:
                             continue
                         rel_name = relative_field(
                             leaf.es_column, selected_column.es_column,

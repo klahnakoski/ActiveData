@@ -1217,7 +1217,7 @@ class Schema(jx_base.Schema):
                 full_path = untype_path(concat_field(path, column_name))
                 for c in columns:
                     if (
-                        c.jx_type == NESTED
+                        c.jx_type == OBJECT
                         and untype_path(c.name) == full_path
                     ):
                         return {c.nested_path[0]: [c]}

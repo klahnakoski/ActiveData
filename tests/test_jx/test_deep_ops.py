@@ -1551,9 +1551,9 @@ class TestDeepOps(BaseTestCase):
             "expecting_list": {
                 "meta": {"format": "list"},
                 "data": [
-                    {"q.a": 0, "q.b": 1},
-                    {"q.a": 0},
-                    {}
+                    {"x": 1, "q.a": 0, "q.b": 1},
+                    {"x": 1, "q.a": 0},
+                    {"x": 1}
                 ]
             }
         }
