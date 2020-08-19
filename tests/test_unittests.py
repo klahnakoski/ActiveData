@@ -272,8 +272,6 @@ class TestUnittests(BaseTestCase):
 
         Log.note("result\n{{result|indent}}", {"result": result})
 
-
-
     def test_longest_running_tests(self):
         test = dict_to_data({"query": {
             "sort": {"sort": -1, "field": "avg"},
@@ -297,5 +295,3 @@ class TestUnittests(BaseTestCase):
         result = json2value(response.all_content.decode('utf8'))
 
         Log.note("result\n{{result|indent}}", {"result": result})
-
-

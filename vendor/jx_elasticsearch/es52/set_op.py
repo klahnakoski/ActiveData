@@ -41,7 +41,7 @@ from mo_dots import (
     unwrap,
     Null,
     list_to_data,
-    unwraplist,
+    unwraplist, startswith_field,
 )
 from mo_future import text
 from mo_json import NESTED, INTERNAL, OBJECT, EXISTS, PRIMITIVE
@@ -198,15 +198,44 @@ def get_selects(query):
     for select in selects:
         # IF THERE IS A *, THEN INSERT THE EXTRA COLUMNS
         if is_op(select.value, LeavesOp) and is_op(select.value.term, Variable):
-            term = select.value.term
-            split_variable = schema.split_values(term.var, exclude_type=PRIMITIVE)
             if term.var == ".":
                 # PLAIN * MEANS EVERYTHING
-                for path in schema.query_path[1:]:
-                    parent_schema = Schema(path, schema.snowflake)
-                    part = parent_schema.split_values(term.var, exclude_type=PRIMITIVE + (NESTED,))
-                    for k, v in part.items():
-                        split_variable[k].extend(v)
+                for leaf in schema.columns:
+                    if leaf.jx_type in (OBJECT, EXISTS):
+                        continue
+                    if leaf.name == "_id":
+                        continue
+                    nested_level = len(leaf.nested_path)
+                    if nested_level > query_level:
+                        continue
+                    if nested_level == query_level:
+                        rel_name = untype_path(relative_field(leaf.name, query_path))
+                        name = concat_field(select.name, untype_path(rel_name))
+                        put_name = concat_field(select.name, literal_field(untype_path(rel_name)))
+
+                        new_select.append({
+                            "name": name,
+                            "value": Variable(leaf.es_column),
+                            "put": {"name": put_name, "index": put_index, "child": "."},
+                            "pull": get_pull_source(leaf),
+                        })
+                        put_index += 1
+                    elif nested_level < query_level and leaf.jx_type != NESTED:
+                        rel_name = untype_path(relative_field(leaf.name, leaf.nested_path[0]))
+                        name = concat_field(select.name, untype_path(rel_name))
+                        put_name = concat_field(select.name, literal_field(untype_path(rel_name)))
+
+                        new_select.append({
+                            "name": name,
+                            "value": Variable(leaf.es_column),
+                            "put": {"name": put_name, "index": put_index, "child": "."},
+                            "pull": get_pull_source(leaf),
+                        })
+                        put_index += 1
+                continue
+
+            term = select.value.term
+            split_variable = schema.split_values(term.var, exclude_type=PRIMITIVE)
 
             for nesting, selected_columns in split_variable.items():
                 for selected_column in selected_columns:
@@ -247,6 +276,7 @@ def get_selects(query):
 
             split_variable = schema.split_values(select.value.var, exclude_type=PRIMITIVE)
             if all(not v for v in split_variable.values()):
+                # CAN NOT FIND
                 new_select.append({
                     "name": select.name,
                     "value": NULL,
@@ -257,17 +287,13 @@ def get_selects(query):
 
             for nesting, selected_columns in split_variable.items():
                 for selected_column in selected_columns:
-                    if len(selected_column.nested_path) > query_level:
-                        # WE ARE PULLING THE SOURCE FOR THIS
-                        leaves = [selected_column]
-                    else:
-                        leaves = schema.split_leaves(
-                            selected_column,
-                            exclude_type=(EXISTS, OBJECT)
-                        )
+                    leaves = schema.split_leaves(
+                        selected_column,
+                        exclude_type=(EXISTS, OBJECT)
+                    )
                     for leaf in leaves:
                         if leaf.es_column in schema.query_path:
-                            continue
+                            continue  # ALREADY CONSIDERED
                         if leaf.jx_type == NESTED:
                             new_select.append({
                                 "name": select.name,

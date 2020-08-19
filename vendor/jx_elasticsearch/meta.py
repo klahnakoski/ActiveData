@@ -1215,12 +1215,16 @@ class Schema(jx_base.Schema):
             # column_name IS A BRANCH-POINT ON AN ARM OF THE SNOWFLAKE
             for path in search_order:
                 full_path = untype_path(concat_field(path, column_name))
+                found = False
                 for c in columns:
                     if (
                         c.jx_type == OBJECT
                         and untype_path(c.name) == full_path
                     ):
-                        return {c.nested_path[0]: [c]}
+                        found = True
+                        output[c.nested_path[0]].append(c)
+                if found:
+                    return output
             Log.error("not expected")
 
         # WE HAVE A column_name TO WORK WITH
