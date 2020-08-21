@@ -205,10 +205,13 @@ def get_selects(query):
                         continue
                     if leaf.name == "_id":
                         continue
+                    if leaf.name == ".":
+                        # THE NESTED VERSION OF "." IS IRREGULAR
+                        continue
                     nested_level = len(leaf.nested_path)
                     if nested_level > query_level:
                         continue
-                    if nested_level == query_level:
+                    if nested_level == query_level and leaf.name != ".":
                         rel_name = untype_path(relative_field(leaf.name, query_path))
                         name = concat_field(select.name, untype_path(rel_name))
                         put_name = concat_field(select.name, literal_field(untype_path(rel_name)))

@@ -1213,6 +1213,7 @@ class Schema(jx_base.Schema):
 
         if clean_name in [untype_path(a) for a in arm]:
             # column_name IS A BRANCH-POINT ON AN ARM OF THE SNOWFLAKE
+            query_depth = len(query_path[0])
             for path in search_order:
                 full_path = untype_path(concat_field(path, column_name))
                 found = False
@@ -1220,6 +1221,7 @@ class Schema(jx_base.Schema):
                     if (
                         c.jx_type == OBJECT
                         and untype_path(c.name) == full_path
+                        and len(c.nested_path) <= query_depth
                     ):
                         found = True
                         output[c.nested_path[0]].append(c)
