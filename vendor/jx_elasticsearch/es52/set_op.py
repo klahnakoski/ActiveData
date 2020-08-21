@@ -395,10 +395,21 @@ def get_selects(query):
             more = inners(query_path[:-1], pos)
             if source_path and source_path < query_path[-1]:
                 rel_path = relative_field(query_path[-1], source_path)
+                lit_rel_path = literal_field(rel_path)
 
                 def source(acc):
                     hits = acc[parent_pos]._source[rel_path]
-                    if hits:
+                    inner_hits = acc[parent_pos].inner_hits[lit_rel_path].hits.hits
+                    if inner_hits:
+                        # inner_hits WILL GUIDE MATCHES INTO THE SOURCE
+                        for meta in inner_hits:
+                            nested = meta._nested
+                            # ASSUME nested.field == rel_path
+                            inner_row = hits[nested.offset]
+                            acc[pos] = inner_row
+                            for tt in more(acc):
+                                yield tt
+                    elif hits:
                         for inner_row in hits:
                             acc[pos] = inner_row
                             for tt in more(acc):
@@ -412,9 +423,9 @@ def get_selects(query):
                 path = literal_field(query_path[-1])
 
                 def recurse(acc):
-                    hits = acc[parent_pos].inner_hits[path].hits.hits
-                    if hits:
-                        for inner_row in hits:
+                    inner_hits = acc[parent_pos].inner_hits[path].hits.hits
+                    if inner_hits:
+                        for inner_row in inner_hits:
                             acc[pos] = inner_row
                             for tt in more(acc):
                                 yield tt
