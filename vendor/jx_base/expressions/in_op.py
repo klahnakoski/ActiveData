@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, unicode_literals
 
+from jx_base.expressions.and_op import AndOp
+from jx_base.expressions.nested_op import NestedOp
 from jx_base.expressions.eq_op import EqOp
 from jx_base.expressions.expression import Expression
 from jx_base.expressions.false_op import FALSE
@@ -64,6 +66,8 @@ class InOp(Expression):
             return FALSE
         elif is_literal(value) and is_literal(superset):
             return self.lang[Literal(self())]
+        elif is_op(value, NestedOp):
+            return NestedOp(value.path, None, AndOp([InOp([value.select, superset]), value.where])).exists().partial_eval(lang)
         else:
             return self.lang[InOp([value, superset])]
 

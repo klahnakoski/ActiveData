@@ -122,8 +122,8 @@ class {{class_name}}(Mapping):
             return
         Log.error(
             "constraint\\n{" + "{code}}\\nnot satisfied {" + "{expect}}\\n{" + "{value|indent}}",
-            code={{constraint_expr|quote}}, 
-            expect={{constraint}}, 
+            code={{constraint_expr|quote}},
+            expect={{constraint}},
             value=row
         )
 
@@ -287,6 +287,7 @@ Column = DataClass(
             "then": {"in": {"cardinality": [0, 1]}},
             "else": True,
         },
+        {"not": {"prefix": [{"first": "nested_path"}, {"literal": "testdata"}]}},
         {"eq": [{"last": "nested_path"}, {"literal": "."}]},
         {
             "when": {"eq": [{"literal": ".~N~"}, {"right": {"es_column": 4}}]},

@@ -204,56 +204,6 @@ def string2url(value):
         Log.error("Expecting a string")
 
 
-# def url_param2value(param):
-#     """
-#     CONVERT URL QUERY PARAMETERS INTO DICT
-#     """
-#     if is_text(param):
-#         param = param.encode("ascii")
-#
-#     def _decode(v):
-#         output = []
-#         i = 0
-#         while i < len(v):
-#             c = v[i]
-#             if c == "%":
-#                 d = hex2bytes(v[i + 1:i + 3])
-#                 output.append(d)
-#                 i += 3
-#             else:
-#                 output.append(c)
-#                 i += 1
-#
-#         output = (b"".join(output)).decode("latin1")
-#         try:
-#             return json2value(output)
-#         except Exception:
-#             pass
-#         return output
-#
-#
-#     query = {}
-#     for p in param.split(b'&'):
-#         if not p:
-#             continue
-#         if p.find(b"=") == -1:
-#             k = p
-#             v = True
-#         else:
-#             k, v = p.split(b"=")
-#             v = _decode(v)
-#
-#         u = query.get(k)
-#         if u is None:
-#             query[k] = v
-#         elif is_list(u):
-#             u += [v]
-#         else:
-#             query[k] = [u, v]
-#
-#     return query
-
-
 def html2unicode(value):
     # http://stackoverflow.com/questions/57708/convert-xml-html-entities-into-unicode-string-in-python
     return HTMLParser.HTMLParser().unescape(value)

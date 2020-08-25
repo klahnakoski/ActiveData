@@ -1331,6 +1331,7 @@ def parse_properties(parent_index_name, parent_name, nested_path, esProperties):
             nested_path=nested_path,
             multi=1001
         ))
+        # WE CAN ALSO BE REFERING TO SINGLE DOCUMENTS (DEPENDS ON CONTEXT)
         columns.append(Column(
             name='.',
             es_index=parent_index_name,
@@ -1339,7 +1340,7 @@ def parse_properties(parent_index_name, parent_name, nested_path, esProperties):
             jx_type=OBJECT,
             cardinality=1,
             last_updated=Date.now(),
-            nested_path=[parent_index_name]+nested_path,
+            nested_path=nested_path,
             multi=1
         ))
 
