@@ -314,7 +314,7 @@ class decorate(object):
 
 
 def flatten(items):
-    return [vv for v in items for vv in v]
+    return (vv for v in items for vv in v)
 
 
 _keep_imports = (ConfigParser, zip_longest, reduce, transpose, izip, HTMLParser, urlparse, StringIO, BytesIO, allocate_lock, get_ident, start_new_thread, interrupt_main)

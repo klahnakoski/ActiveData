@@ -297,9 +297,14 @@ def _split_expression(expr, schema, all_paths):
         ]
         return acc
 
+    new_nests = list(set(n for v in expr.vars() for n, cs in schema.split_values(v.var).items() if cs))
+
     all_nests = list(set(
         c.nested_path[0] for v in expr.vars() for c in schema.values(v.var)
     ))
+
+    if set(new_nests)!=set(all_nests):
+        Log.alert("inspect me")
 
     if len(all_nests) > 1:
         Log.error("do not know how to handle")

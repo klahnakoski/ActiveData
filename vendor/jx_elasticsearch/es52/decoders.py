@@ -38,9 +38,6 @@ class AggsDecoder(object):
         e.allowNulls = coalesce(e.allowNulls, True)
 
         if e.value and e.domain.type == "default":
-            # if query.groupby:
-            #     return object.__new__(DefaultDecoder, e)
-
             if is_text(e.value):
                 Log.error("Expecting Variable or Expression, not plain string")
 

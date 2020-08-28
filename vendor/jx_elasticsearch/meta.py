@@ -53,7 +53,7 @@ from mo_dots import (
     to_data,
 )
 from mo_dots.lists import last, is_sequence
-from mo_future import first, long, none_type, text, sort_using_key
+from mo_future import first, long, none_type, text, sort_using_key, flatten
 from mo_json import BOOLEAN, EXISTS, OBJECT, INTERNAL, STRUCT, NESTED
 from mo_json.typed_encoder import (
     unnest_path,
@@ -1051,23 +1051,29 @@ class Schema(jx_base.Schema):
         :param exclude_type: SOME COLUMN TYPES ARE NOT NEEDED
         :return: ALL COLUMNS THAT START WITH column_name, NOT INCLUDING DEEPER NESTED COLUMNS
         """
+        split_variables = self.split_values(column_name, exclude_type=exclude_type)
+        new_output = set(flatten(self.split_leaves(c, exclude_type) for cs in split_variables.values() for c in cs))
+
         clean_name = untype_path(column_name)
         columns = self.columns
 
         if clean_name == ".":
             # ALL COLUMNS
-            return set(
+            output = set(
                 c
                 for c in columns
                 if c.name != "_id"
                 and c.cardinality != 0
                 and c.jx_type not in exclude_type
             )
+            if new_output != output:
+               Log.alert("inspect me")
+            return output
 
         if clean_name != column_name:
             # column_name IS AN EXPLICT NAME, INCLUDING TYPE INFO
             for path in self.query_path:
-                output = [
+                output = set(
                     c
                     for c in columns
                     if (
@@ -1075,9 +1081,13 @@ class Schema(jx_base.Schema):
                         and (c.name != "_id" or column_name == "_id")
                         and startswith_field(relative_field(c.name, path), column_name)
                     )
-                ]
+                )
                 if output:
+                    if new_output != output:
+                       Log.alert("inspect me")
                     return set(output)
+            if new_output != set():
+               Log.alert("inspect me")
             return set()
 
         # TODO: HOW TO REFER TO FIELDS THAT MAY BE SHADOWED BY A RELATIVE NAME?
@@ -1085,7 +1095,7 @@ class Schema(jx_base.Schema):
         for path in self.query_path:
             if untype_path(path) == clean_name:
                 # ASKING FOR LEAVES OF A NESTED COLUMN
-                output = [
+                output = set(
                     c
                     for c in columns
                     if (
@@ -1094,10 +1104,12 @@ class Schema(jx_base.Schema):
                         and (c.name != "_id" or clean_name == "_id")
                         and path == c.nested_path[0]  # EVERYTHING AT THIS LEVEL
                     )
-                ]
+                )
+                if new_output != output:
+                   Log.alert("inspect me")
                 return set(output)
 
-            output = [
+            output = set(
                 c
                 for c in columns
                 if (
@@ -1111,9 +1123,13 @@ class Schema(jx_base.Schema):
                         untype_path(relative_field(c.name, path)), clean_name
                     )
                 )
-            ]
+            )
             if output:
+                if new_output != output:
+                   Log.alert("inspect me")
                 return set(output)
+        if new_output != set():
+           Log.alert("inspect me")
         return set()
 
     def split_leaves(self, column, exclude_type=(OBJECT, EXISTS)):
@@ -1143,6 +1159,8 @@ class Schema(jx_base.Schema):
         """
         RETURN ALL COLUMNS THAT column_name REFERS TO
         """
+        new_output = set(flatten(self.split_values(column_name, exclude_type).values()))
+
         clean_name = untype_path(column_name)
         columns = self.columns
 
@@ -1159,7 +1177,11 @@ class Schema(jx_base.Schema):
                     if c.name == full_path:
                         output.append(c)
                 if output:
+                    if set(new_output)!=set(output):
+                       Log.alert("inspect me")
                     return output
+            if new_output:
+               Log.alert("inspect me")
             return []
 
         output = []
@@ -1173,15 +1195,24 @@ class Schema(jx_base.Schema):
                 if untype_path(c.name) == full_path:
                     output.append(c)
             if output:
+                if set(new_output) != set(output):
+                   Log.alert("inspect me")
                 return output
+        if new_output:
+           Log.alert("inspect me")
         return []
 
     def split_values(self, column_name, exclude_type=(OBJECT, EXISTS)):
         """
-        RETURN ALL COLUMNS THAT column_name REFERS TO
+        RETURN ALL COLUMNS THAT column_name REFERS TO, SPLIT BY NESTED PATH
         """
-        clean_name = untype_path(column_name)
         columns = self.columns
+        if column_name == "_id":
+            for c in columns:
+                if c.name == "_id":
+                    return {".": [c]}
+
+        clean_name = untype_path(column_name)
 
         query_path = self.query_path[0]
         # ANYTHING IN THE SNOWFLAKE ARM IS ALLOWED
@@ -1192,11 +1223,6 @@ class Schema(jx_base.Schema):
         ]
         output = OrderedDict((p, []) for p in arm)
         search_order = self.query_path + list(reversed(arm[:-len(self.query_path)]))
-
-        if column_name == "_id":
-            for c in columns:
-                if c.name == "_id":
-                    return {".": [c]}
 
         if clean_name != column_name:
             # SPECIFIC FIELD REQUESTED
@@ -1213,7 +1239,7 @@ class Schema(jx_base.Schema):
 
         if clean_name in [untype_path(a) for a in arm]:
             # column_name IS A BRANCH-POINT ON AN ARM OF THE SNOWFLAKE
-            query_depth = len(query_path[0])
+            query_depth = len(query_path)
             for path in search_order:
                 full_path = untype_path(concat_field(path, column_name))
                 found = False
