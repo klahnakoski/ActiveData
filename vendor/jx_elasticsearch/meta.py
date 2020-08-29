@@ -1052,7 +1052,7 @@ class Schema(jx_base.Schema):
         :return: ALL COLUMNS THAT START WITH column_name, NOT INCLUDING DEEPER NESTED COLUMNS
         """
         split_variables = self.split_values(column_name, exclude_type=exclude_type)
-        new_output = set(flatten(self.split_leaves(c, exclude_type) for cs in split_variables.values() for c in cs))
+        new_output = set(flatten(self.split_leaves(c, exclude_type) for c in split_variables.values() if c))
 
         clean_name = untype_path(column_name)
         columns = self.columns
@@ -1159,7 +1159,7 @@ class Schema(jx_base.Schema):
         """
         RETURN ALL COLUMNS THAT column_name REFERS TO
         """
-        new_output = set(flatten(self.split_values(column_name, exclude_type).values()))
+        new_output = set(self.split_values(column_name, exclude_type).values())
 
         clean_name = untype_path(column_name)
         columns = self.columns
@@ -1202,27 +1202,29 @@ class Schema(jx_base.Schema):
            Log.alert("inspect me")
         return []
 
-    def split_values(self, column_name, exclude_type=(OBJECT, EXISTS)):
+    def split_values(self, column_name, exclude_type=(EXISTS,)):
         """
         RETURN ALL COLUMNS THAT column_name REFERS TO, SPLIT BY NESTED PATH
         """
+        output = OrderedDict()
         columns = self.columns
         if column_name == "_id":
             for c in columns:
                 if c.name == "_id":
-                    return {".": [c]}
+                    output['.'] = c
+                    return output
 
         clean_name = untype_path(column_name)
 
-        query_path = self.query_path[0]
+        query_path = self.query_path
+        query_table = query_path[0]
         # ANYTHING IN THE SNOWFLAKE ARM IS ALLOWED
         arm = [
             p[0]
             for p in self.snowflake.query_paths
-            if startswith_field(p[0], query_path) or startswith_field(query_path, p[0])
+            if startswith_field(p[0], query_table) or startswith_field(query_table, p[0])
         ]
-        output = OrderedDict((p, []) for p in arm)
-        search_order = self.query_path + list(reversed(arm[:-len(self.query_path)]))
+        search_order = query_path + list(reversed(arm[:-len(query_path)]))
 
         if clean_name != column_name:
             # SPECIFIC FIELD REQUESTED
@@ -1232,7 +1234,7 @@ class Schema(jx_base.Schema):
                 for c in columns:
                     if c.name == full_path:
                         found = True
-                        output[c.nested_path[0]].append(c)
+                        output[c.nested_path[0]] = c
                 if found:
                     return output
             return output
@@ -1250,7 +1252,7 @@ class Schema(jx_base.Schema):
                         and len(c.nested_path) <= query_depth
                     ):
                         found = True
-                        output[c.nested_path[0]].append(c)
+                        output[c.nested_path[0]] = c
                 if found:
                     return output
             Log.error("not expected")
@@ -1264,10 +1266,18 @@ class Schema(jx_base.Schema):
                     c.cardinality != 0
                     and c.jx_type not in exclude_type
                     and untype_path(c.name) == full_path
-                    and (c.name not in self.query_path or c.jx_type != NESTED)
+                    and (c.name not in query_path or c.jx_type != NESTED)
                 ):
                     found = True
-                    output[c.nested_path[0]].append(c)
+                    np = c.nested_path[0]
+                    best = output.get(np)
+                    if not best:
+                        output[np] = c
+                        # ENSURE ORDER IS MAINTAINED
+                        if len(output) > 1:
+                            output = OrderedDict((p, v) for p in arm for v in [output.get(p)] if v)
+                    elif startswith_field(best.name, c.name):
+                        output[np] = c
             if found:
                 return output
         return output

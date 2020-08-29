@@ -237,7 +237,6 @@ def pre_process(query):
     :param query:
     :return: some useful structures for further query manipulation
     """
-
     schema = query.frum.schema
     where_vars = query.where.vars()
     var_to_columns = {v.var: schema.values(v.var) for v in where_vars}
@@ -297,7 +296,7 @@ def _split_expression(expr, schema, all_paths):
         ]
         return acc
 
-    new_nests = list(set(n for v in expr.vars() for n, cs in schema.split_values(v.var).items() if cs))
+    new_nests = list(set(n for v in expr.vars() for n, c in schema.split_values(v.var).items() if c))
 
     all_nests = list(set(
         c.nested_path[0] for v in expr.vars() for c in schema.values(v.var)

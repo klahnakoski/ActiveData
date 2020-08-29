@@ -77,7 +77,7 @@ def get_decoders_by_path(query, schema):
         else:
             # SIMPLE edge.value
             decoder = AggsDecoder(edge, query, limit)
-            depths = list(reversed(sorted(set(n for v in vars_ for n, cs in schema.split_values(v.var).items()))))
+            depths = list(reversed(sorted(set(n for v in vars_ for n, _ in schema.split_values(v.var).items()))))
             output.setdefault(first(depths), []).append(decoder)
             continue
 
