@@ -1838,7 +1838,7 @@ class TestDeepOps(BaseTestCase):
                 {"v": 7}
             ],
             "query": {
-                "from": TEST_TABLE,
+                "from": TEST_TABLE+".a",
                 "edges": [{"name": "b", "value": "a.b"}],
                 "select": {"name": "count", "value": {"when": "v", "then": 1}, "aggregate": "count"}
             },
@@ -1936,23 +1936,3 @@ class TestDeepOps(BaseTestCase):
         }
 
         self.utils.execute_tests(test)
-
-
-
-
-
-# TODO: WHAT DOES * MEAN IN THE CONTEXT OF A DEEP QUERY?
-# THIS SHOULD RETURN SOMETHING, NOT FAIL
-todo = {
-    "select": [
-        "*",
-        "action.*"
-    ],
-    "from": "jobs.action.timings",
-    "format": "list"
-}
-
-
-
-
-

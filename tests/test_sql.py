@@ -52,26 +52,26 @@ class TestSQL(BaseTestCase):
 
     def test_select_from_dual(self):
         sql = "SELECT 1"
-        expected = {"meta": {"format": "table"}, "header": ["."], "data": [[1]]}
+        expected = {"meta": {"format": "table"}, "header": ["1"], "data": [[1]]}
         result = self._run_sql_query(sql)
         compare_to_expected(result.meta.jx_query, result, expected, places=6)
 
     def test_groupby_w_aggregates(self):
         sql = """
-        SELECT 
+        SELECT
             floor(run.timestamp/86400) as date,
             count(result.value) AS "count",
             median(result.value) AS "median",
             percentile(result.value, 0.9) AS "90th"
-        FROM 
-            perf 
-        WHERE 
+        FROM
+            perf
+        WHERE
             run.timestamp>=date('today-month') AND
             run.framework.name='vcs' AND
             run.suite='clone'
         GROUP BY
             floor(run.timestamp/86400)
-        ORDER BY 
+        ORDER BY
             floor(run.timestamp/86400)
         """
 
@@ -120,7 +120,7 @@ class TestSQL(BaseTestCase):
 
     def test_tuid_health(self):
         sql = """
-            SELECT 
+            SELECT
                 count(1) AS error_count,
                 floor(timestamp, 86400) AS "date"
             FROM "debug-etl"

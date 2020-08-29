@@ -111,7 +111,10 @@ def get_selects(query):
 
         elif is_op(select.value, Variable):
             for leaf in set(schema.split_values(select.value.var).values()):
-                leaves = schema.leaves(leaf.es_column)
+                if leaf.es_column in query_path:
+                    expand_split_select(leaf.es_column).source_path = leaf.es_column
+                    continue
+                leaves = schema.split_leaves(leaf)
                 for leaf in leaves:
                     if leaf.jx_type == NESTED:
                         expand_split_select(leaf.es_column).source_path = leaf.es_column

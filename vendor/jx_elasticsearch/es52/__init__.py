@@ -243,6 +243,8 @@ class ES52(Container):
             Log.error("Can not handle")
         except Exception as cause:
             cause = Except.wrap(cause)
+            if "Too many dynamic script compilations" in cause:
+                Log.error('Please add "script.max_compilations_rate: 1000/1m" to elasticsearch.yml file', cause=cause)
             if "Data too large, data for" in cause:
                 http.post(self.es.cluster.url / "_cache/clear")
                 Log.error("Problem (Tried to clear Elasticsearch cache)", cause)

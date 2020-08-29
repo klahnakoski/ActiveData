@@ -77,8 +77,8 @@ def sql_query(path):
                 if data.meta.save:
                     try:
                         result.meta.saved_as = save_query.query_finder.save(data)
-                    except Exception as e:
-                        Log.warning("Unexpected save problem", cause=e)
+                    except Exception as cause:
+                        Log.warning("Unexpected save problem", cause=cause)
 
             result.meta.timing.preamble = mo_math.round(
                 preamble_timer.duration.seconds, digits=4
@@ -115,9 +115,9 @@ def sql_query(path):
             return Response(
                 response_data, status=200, headers={"Content-Type": mimetype.JSON}
             )
-    except Exception as e:
-        e = Except.wrap(e)
-        return send_error(query_timer, request_body, e)
+    except Exception as cause:
+        cause = Except.wrap(cause)
+        return send_error(query_timer, request_body, cause)
 
 
 KNOWN_SQL_AGGREGATES = {"sum", "count", "avg", "median", "percentile", "max", "min"}
@@ -131,9 +131,11 @@ def parse_sql(sql):
     # elif all(isinstance(r, number_types) or (is_data(r) and "literal" in r.keys()) for r in output):
     #     output = {"literal": [r['literal'] if is_data(r) else r for r in output]}
     query = to_data(moz_sql_parser.parse(sql))
-    redundant_select = []
+    query.select = listwrap(query.select)
+
     # PULL OUT THE AGGREGATES
-    for s in listwrap(query.select):
+    redundant_select = []
+    for s in query.select:
         val = s if s == "*" else s.value
 
         # EXTRACT KNOWN AGGREGATE FUNCTIONS
@@ -163,11 +165,8 @@ def parse_sql(sql):
                 pass
 
     # REMOVE THE REDUNDANT select
-    if is_list(query.select):
-        for r in redundant_select:
-            query.select.remove(r)
-    elif query.select and redundant_select:
-        query.select = None
+    for r in redundant_select:
+        query.select.remove(r)
 
     # RENAME orderby TO sort
     query.sort, query.orderby = query.orderby, None
