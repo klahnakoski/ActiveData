@@ -123,11 +123,11 @@ def exists_variable(path):
     return join_field(steps + [EXISTS_TYPE])
 
 
-def split_nested_inner_variables(where, focal_path, var_to_columns):
+def split_nested_inner_variables(where, query_table, var_to_columns):
     """
     SOME VARIABLES ARE BOTH NESTED AND INNER, EXPAND QUERY TO HANDLE BOTH
-    :param where:
-    :param focal_path:
+    :param where:  EXPRESSION TO SPLIT
+    :param query_table: RELATIVE TABLE USED BY QUERY
     :param var_to_columns:
     :return:
     """
@@ -140,20 +140,20 @@ def split_nested_inner_variables(where, focal_path, var_to_columns):
         if not cols:
             for e in wheres:
                 more_exprs.append(e.map({v: NULL}))
-        else:
-            for c in cols:
-                deepest = c.nested_path[0]
-                for e in wheres:
-                    if startswith_field(focal_path, deepest):
-                        more_exprs.append(e.map({v: Variable(
-                            c.es_column, type=c.jx_type, multi=c.multi
-                        )}))
-                    else:
-                        more_exprs.append(e.map({v: NestedOp(
-                            path=Variable(deepest),
-                            select=Variable(c.es_column),
-                            where=Variable(c.es_column).exists(),
-                        )}))
+        for c in cols:
+            deepest = c.nested_path[0]
+            for e in wheres:
+                if startswith_field(query_table, deepest):
+                    more_exprs.append(e.map({v: Variable(
+                        c.es_column, type=c.jx_type, multi=c.multi
+                    )}))
+                else:
+                    # EXPRESSION IS DEEPER NESTED, REARRANGE
+                    more_exprs.append(e.map({v: NestedOp(
+                        path=Variable(deepest),
+                        select=Variable(c.es_column),
+                        where=Variable(c.es_column).exists(),
+                    )}))
         wheres = more_exprs
         var_to_columns = {
             c.es_column: [c] for cs in var_to_columns.values() for c in cs
@@ -302,15 +302,15 @@ def _split_expression(expr, schema, all_paths):
         c.nested_path[0] for v in expr.vars() for c in schema.values(v.var)
     ))
 
-    if set(new_nests)!=set(all_nests):
+    if set(new_nests) != set(all_nests):
         Log.alert("inspect me")
 
-    if len(all_nests) > 1:
-        Log.error("do not know how to handle")
-    elif not all_nests:
+    if not all_nests:
         return [tuple([expr] if p == "." else [] for p in all_paths)]
-    else:
+    elif len(all_nests) == 1:
         return [tuple([expr] if p == all_nests[0] else [] for p in all_paths)]
+    else:
+        Log.error("do not know how to handle")
 
 
 def query_to_outer_joins(query, all_paths, split_select, var_to_columns):

@@ -198,7 +198,7 @@ def get_selects(query):
 
                 return pull_nested_source
 
-    put_index = 0
+    used_names = set()
     for select in selects:
         # IF THERE IS A *, THEN INSERT THE EXTRA COLUMNS
         if is_op(select.value, LeavesOp) and is_op(select.value.term, Variable):
@@ -221,25 +221,25 @@ def get_selects(query):
                         name = concat_field(select.name, untype_path(rel_name))
                         put_name = concat_field(select.name, literal_field(untype_path(rel_name)))
 
+                        used_names.add(put_name)
                         new_select.append({
                             "name": name,
                             "value": Variable(leaf.es_column),
-                            "put": {"name": put_name, "index": put_index, "child": "."},
+                            "put": {"name": put_name, "index": len(used_names)-1, "child": "."},
                             "pull": get_pull_source(leaf),
                         })
-                        put_index += 1
                     elif nested_level < query_level and leaf.jx_type != NESTED:
                         rel_name = untype_path(relative_field(leaf.name, leaf.nested_path[0]))
                         name = concat_field(select.name, untype_path(rel_name))
                         put_name = concat_field(select.name, literal_field(untype_path(rel_name)))
 
+                        used_names.add(put_name)
                         new_select.append({
                             "name": name,
                             "value": Variable(leaf.es_column),
-                            "put": {"name": put_name, "index": put_index, "child": "."},
+                            "put": {"name": put_name, "index": len(used_names)-1, "child": "."},
                             "pull": get_pull_source(leaf),
                         })
-                        put_index += 1
                 continue
 
             split_variable = schema.split_values(term.var, exclude_type=PRIMITIVE)
@@ -258,60 +258,60 @@ def get_selects(query):
                     name = concat_field(select.name, untype_path(rel_name))
                     put_name = concat_field(select.name, literal_field(untype_path(rel_name)))
                     split_select[leaf.nested_path[0]].fields.append(leaf.es_column)
+                    used_names.add(put_name)
                     new_select.append({
                         "name": name,
                         "value": Variable(leaf.es_column),
-                        "put": {"name": put_name, "index": put_index, "child": "."},
+                        "put": {"name": put_name, "index": len(used_names)-1, "child": "."},
                         "pull": get_pull_source(leaf),
                     })
-                    put_index += 1
         elif is_op(select.value, Variable):
             if select.value.var == ".":
                 # PULL ALL SOURCE
+                used_names.add(select.name)
                 new_select.append({
                     "name": select.name,
                     "value": select.value,
-                    "put": {"name": select.name, "index": put_index, "child": "."},
+                    "put": {"name": select.name, "index": len(used_names)-1, "child": "."},
                     "pull": get_pull_source(Data(
                         es_column=query_table, nested_path=query_path
                     )),
                 })
-                put_index += 1
                 continue
 
             split_variable = schema.split_values(select.value.var)
             if not split_variable:
                 # CAN NOT FIND
+                used_names.add(select.name)
                 new_select.append({
                     "name": select.name,
                     "value": NULL,
-                    "put": {"name": select.name, "index": put_index, "child": "."},
+                    "put": {"name": select.name, "index": len(used_names)-1, "child": "."},
                     "pull": NULL,
                 })
-                put_index += 1
 
             for nesting, selected_column in split_variable.items():
                 leaves = schema.split_leaves(selected_column)
                 if not leaves:
+                    used_names.add(select.name)
                     new_select.append({
                         "name": select.name,
                         "value": NULL,
-                        "put": {"name": select.name, "index": put_index, "child": "."},
+                        "put": {"name": select.name, "index": len(used_names)-1, "child": "."},
                         "pull": NULL,
                     })
-                    put_index += 1
                     continue
-                add_index = 0
                 for leaf in leaves:
                     if leaf.es_column in query_path:
                         continue  # ALREADY CONSIDERED
                     if leaf.jx_type == NESTED:
+                        used_names.add(select.name)
                         new_select.append({
                             "name": select.name,
                             "value": select.value,
                             "put": {
                                 "name": select.name,
-                                "index": put_index,
+                                "index": len(used_names)-1,
                                 "child": ".",
                             },
                             "pull": get_pull_source(Data(
@@ -319,35 +319,33 @@ def get_selects(query):
                                 nested_path=(leaf.es_column,) + tuple(leaf.nested_path),
                             )),
                         })
-                        add_index = 1
                     elif leaf.es_column == "_id":
+                        used_names.add(select.name)
                         new_select.append({
                             "name": select.name,
                             "value": Variable(leaf.es_column),
                             "put": {
                                 "name": select.name,
-                                "index": put_index,
+                                "index": len(used_names)-1,
                                 "child": ".",
                             },
                             "pull": pull_id,
                         })
-                        add_index = 1
                     else:
                         expand_split_select(nesting).fields.append(leaf.es_column)
                         child = untype_path(relative_field(leaf.es_column, selected_column.es_column))
 
+                        used_names.add(select.name)
                         new_select.append({
                             "name": select.name,
                             "value": Variable(leaf.es_column),
                             "put": {
                                 "name": select.name,
-                                "index": put_index,
+                                "index": len(used_names)-1,
                                 "child": child,
                             },
                             "pull": get_pull_source(leaf),
                         })
-                        add_index = 1
-                put_index += add_index
         else:
             op, split_scripts = split_expression_by_path(
                 select.value, schema, lang=Painless
@@ -358,12 +356,12 @@ def get_selects(query):
                     es_select = split_select[p]
                     es_select.scripts[select.name] = {"script": text(es_script)}
 
+                    used_names.add(select.name)
                     new_select.append({
                         "name": select.name,
                         "pull": pull_script(text(pos + 1), select.name),
-                        "put": {"name": select.name, "index": put_index, "child": "."},
+                        "put": {"name": select.name, "index": len(used_names)-1, "child": "."},
                     })
-                    put_index += 1
 
     def inners(query_path, parent_pos):
         """
