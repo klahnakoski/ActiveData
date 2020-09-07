@@ -14,6 +14,7 @@ from jx_base.expressions.base_inequality_op import BaseInequalityOp
 from jx_base.expressions.base_multi_op import BaseMultiOp
 from jx_base.expressions.basic_add_op import BasicAddOp
 from jx_base.expressions.basic_eq_op import BasicEqOp
+from jx_base.expressions.basic_in_op import BasicInOp
 from jx_base.expressions.basic_index_of_op import BasicIndexOfOp
 from jx_base.expressions.basic_mul_op import BasicMulOp
 from jx_base.expressions.basic_multi_op import BasicMultiOp

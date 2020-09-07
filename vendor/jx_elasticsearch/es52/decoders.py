@@ -214,8 +214,7 @@ class SetDecoder(AggsDecoder):
             for i, term in enumerate(concat_inner.terms):
                 acc = es_query
                 for nest in term.nests:
-                    if nest.where is not TRUE:
-                        acc = NestedAggs(nest.path.var).add(FilterAggs("_missing" + text(i), nest.where, self).add(acc))
+                    acc = NestedAggs(nest.path.var).add(FilterAggs("_missing" + text(i), nest.where, self).add(acc))
                 output.add(acc)
         return output
 

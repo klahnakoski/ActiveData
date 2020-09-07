@@ -10,10 +10,11 @@
 
 from __future__ import absolute_import, division, unicode_literals
 
-from jx_base.expressions import AndOp, FALSE
+from jx_base.expressions.and_op import AndOp
 from jx_base.expressions.eq_op import EqOp
 from jx_base.expressions.es_select_op import ESSelectOp
 from jx_base.expressions.expression import Expression
+from jx_base.expressions.false_op import FALSE
 from jx_base.expressions.literal import ZERO
 from jx_base.expressions.not_op import NotOp
 from jx_base.expressions.null_op import NULL

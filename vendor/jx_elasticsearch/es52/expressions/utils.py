@@ -140,24 +140,29 @@ def split_nested_inner_variables(where, query_table, var_to_columns):
         if not cols:
             for e in wheres:
                 more_exprs.append(e.map({v: NULL}))
-        for c in cols:
-            deepest = c.nested_path[0]
+        for col in cols:
+            nested_table = col.nested_path[0]
             for e in wheres:
-                if startswith_field(query_table, deepest):
-                    more_exprs.append(e.map({v: Variable(
-                        c.es_column, type=c.jx_type, multi=c.multi
-                    )}))
+                acc = []
+                for other in cols:
+                    if other != col:
+                        acc.append(e.map({v: NULL}))
+                        acc.append(MissingOp(Variable(other.es_column)))
+
+                if startswith_field(query_table, nested_table):
+                    exists = e.map({v: Variable(
+                        col.es_column, type=col.jx_type, multi=col.multi
+                    )})
                 else:
                     # EXPRESSION IS DEEPER NESTED, REARRANGE
-                    more_exprs.append(e.map({v: NestedOp(
-                        path=Variable(deepest),
-                        select=Variable(c.es_column),
-                        where=Variable(c.es_column).exists(),
-                    )}))
+                    exists = e.map({v: NestedOp(
+                        path=Variable(nested_table),
+                        select=Variable(col.es_column),
+                        where=Variable(col.es_column).exists(),
+                    )})
+                acc.append(exists)
+                more_exprs.append(AndOp(acc))
         wheres = more_exprs
-        var_to_columns = {
-            c.es_column: [c] for cs in var_to_columns.values() for c in cs
-        }
 
     return OrOp(wheres)
 
@@ -227,6 +232,7 @@ def setop_to_inner_joins(query, all_paths, split_select, var_to_columns):
         for c in cs:
             paths_to_cols[c.nested_path[0]].append(c)
 
+    Log.note("outerjoin={{concat_outer}}", concat_outer=concat_outer)
     concat_inner = outer_to_inner(concat_outer, paths_to_cols)
     return concat_inner
 
@@ -316,19 +322,21 @@ def _split_expression(expr, schema, all_paths):
 def query_to_outer_joins(query, all_paths, split_select, var_to_columns):
     """
     CONVERT FROM JSON QUERY EXPRESSION TO A NUMBER OF OUTER JOINS
-    :param frum:
-    :param expr:
+
+    :param query:
     :param all_paths:
+    :param split_select:
     :param var_to_columns:
     :return:
     """
-
     frum = query.frum
     where = query.where
     query_path = frum.schema.query_path[0]
 
     # MAP TO es_columns, INCLUDE NESTED EXISTENCE IN EACH VARIABLE
     wheres = split_nested_inner_variables(where, query_path, var_to_columns)
+    Log.note("wheres={{wheres|json}}", wheres=wheres)
+
     concat_outer_and = _split_expression(wheres, frum.schema, all_paths)
 
     # ATTACH SELECTS

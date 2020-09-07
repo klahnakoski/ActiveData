@@ -63,7 +63,7 @@ def all_bases(bases):
 # requires multiple dispatch.
 #
 
-# SOLUTION: multiple dispatch on the (self, lang) parameter pair
+# SOLUTION: double dispatch on the (self, lang) parameter pair
 #
 # DETAILS: partial_eval(lang) demands a language argument so it can switch
 # decisions based on language. You declare a class for every implemented
@@ -95,7 +95,7 @@ class LanguageElement(type):
 
 def partial_eval(self, lang):
     """
-    DISPATCH TO CLASS-SPECIFIC partial_eval(lang)
+    DISPATCH TO CLASS-SPECIFIC self.partial_eval(lang)
     """
     try:
         if self.simplified:
@@ -137,7 +137,8 @@ class Language(object):
 
         if self.name != "JX":
             self.ops = copy(JX.ops)  # A COPY, IF ONLY TO KNOW IT WAS REPLACED
-            expecting = tuple(sorted(set(self.ops[1].lookups.keys())))
+
+            double_dispatch_methods = tuple(sorted(set(self.ops[1].lookups.keys())))
         else:
             num_ops = 1 + max(
                 obj.get_id()
@@ -146,18 +147,18 @@ class Language(object):
             )
             self.ops = [None] * num_ops
 
-            # FIND ALL MULTIDISPATCH
-            expecting = set()
+            # FIND ALL DOUBLE-DISPATCH METHODS
+            double_dispatch_methods = set()
             for _, new_op in list(module_vars.items()):
                 if is_Expression(new_op):
                     for name, member in vars(new_op).items():
                         try:
                             args = get_function_arguments(member)
                             if args[:2] == ("self", "lang"):
-                                expecting.add(name)
+                                double_dispatch_methods.add(name)
                         except Exception as cause:
                             pass
-            expecting = tuple(sorted(expecting))
+            double_dispatch_methods = tuple(sorted(double_dispatch_methods))
 
         for _, new_op in list(module_vars.items()):
             if is_Expression(new_op):
@@ -169,24 +170,24 @@ class Language(object):
 
                 # ENSURE THE partial_eval IS REGISTERED
                 if jx_op is None:
-                    for expect in expecting:
-                        member = extract_method(new_op, expect)
+                    for dd_method in double_dispatch_methods:
+                        member = extract_method(new_op, dd_method)
                         args = get_function_arguments(member)
                         if args[:2] != ("self", "lang"):
                             Log.error(
                                 "{{module}}.{{clazz}}.{{name}} is expecting (self, lang) parameters, minimum",
                                 module=new_op.__module__,
                                 clazz=new_op.__name__,
-                                name=expect
+                                name=dd_method
                             )
-                        new_op.lookups[expect] = [member]
+                        new_op.lookups[dd_method] = [member]
                 elif jx_op.__name__ != new_op.__name__:
                     Log.error("Logic error")
                 else:
                     new_op.lookups = jx_op.lookups
-                    for expect in expecting:
-                        member = extract_method(new_op, expect)
-                        jx_op.lookups[expect] += [member]
+                    for dd_method in double_dispatch_methods:
+                        member = extract_method(new_op, dd_method)
+                        jx_op.lookups[dd_method] += [member]
 
                     # COPY OTHER DEFINED METHODS
                     others = list(vars(new_op).items())
@@ -197,14 +198,14 @@ class Language(object):
                                 setattr(jx_op, n, v)
         if self.name == 'JX':
             # FINALLY, SWAP OUT THE BASE METHODS
-            for expect in expecting:
-                existing = getattr(BaseExpression, expect, None)
+            for dd_method in double_dispatch_methods:
+                existing = getattr(BaseExpression, dd_method, None)
                 if existing:
                     # USE BaseExpression WHEN AVAILABLE
-                    setattr(Expression, expect, existing)
+                    setattr(Expression, dd_method, existing)
                 else:
                     # MAKE A DISPATCHER, IF NOT ONE ALREADY
-                    setattr(Expression, expect, get_dispatcher_for(expect))
+                    setattr(Expression, dd_method, get_dispatcher_for(dd_method))
 
         else:
             # ENSURE THE ALL OPS ARE DEFINED ON THE NEW LANGUAGE
@@ -222,6 +223,7 @@ class Language(object):
             setattr(self, o.__name__, o)
 
     def __getitem__(self, item):
+        Log.error("Stop using")
         if item == None:
             Log.error("expecting operator")
         class_ = self.ops[item.get_id()]

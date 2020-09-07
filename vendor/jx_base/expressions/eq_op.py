@@ -43,9 +43,9 @@ class EqOp(Expression):
             acc = []
             for lhs, rhs in items:
                 if rhs.json.startswith("["):
-                    acc.append(cls.lang[InOp([Variable(lhs), rhs])])
+                    acc.append(InOp([Variable(lhs), rhs]))
                 else:
-                    acc.append(cls.lang[EqOp([Variable(lhs), rhs])])
+                    acc.append(EqOp([Variable(lhs), rhs]))
             return cls.lang[AndOp(acc)]
 
     def __init__(self, terms):
