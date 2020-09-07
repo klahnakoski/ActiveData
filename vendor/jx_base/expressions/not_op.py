@@ -35,10 +35,10 @@ class NotOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[NotOp(self.term.map(map_))]
+        return NotOp(self.term.map(map_))
 
     def missing(self, lang):
-        return self.lang[self.term].missing(lang)
+        return (self.term).missing(lang)
 
     def invert(self, lang):
         return self.term.partial_eval(lang)

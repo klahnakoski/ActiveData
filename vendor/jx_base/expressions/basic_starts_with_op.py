@@ -48,7 +48,7 @@ class BasicStartsWithOp(Expression):
         return FALSE
 
     def partial_eval(self, lang):
-        return self.lang[BasicStartsWithOp([
+        return BasicStartsWithOp([
             StringOp(self.value).partial_eval(lang),
             StringOp(self.prefix).partial_eval(lang),
-        ])]
+        ])

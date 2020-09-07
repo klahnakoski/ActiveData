@@ -37,7 +37,7 @@ class OrOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[OrOp([t.map(map_) for t in self.terms])]
+        return (OrOp([t.map(map_) for t in self.terms]))
 
     def missing(self, lang):
         return FALSE
@@ -86,7 +86,7 @@ class OrOp(Expression):
             return FALSE
         if len(terms) == 1:
             return terms[0]
-        return self.lang[OrOp(terms)]
+        return (OrOp(terms))
 
 
 export("jx_base.expressions.and_op", OrOp)

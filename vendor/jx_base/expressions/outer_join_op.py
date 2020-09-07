@@ -90,8 +90,8 @@ class OuterJoinOp(Expression):
                 nests.append(n)
 
         if nests:
-            return self.lang[OuterJoinOp(
+            return OuterJoinOp(
                 frum=self.frum.partial_eval(lang), nests=nests
-            )]
+            )
         else:
             return NULL

@@ -61,7 +61,7 @@ class SelectOp(Expression):
                     Log.error("expecting a name property")
             else:
                 terms.append({"name": t.name, "value": jx_expression(t.value)})
-        return cls.lang[SelectOp(terms)]
+        return (SelectOp(terms))
 
     def __data__(self):
         return {"select": [

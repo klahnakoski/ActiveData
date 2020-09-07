@@ -55,7 +55,7 @@ class CaseOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[CaseOp([w.map(map_) for w in self.whens])]
+        return CaseOp([w.map(map_) for w in self.whens])
 
     def missing(self, lang):
         m = self.whens[-1].missing(lang)
@@ -66,10 +66,10 @@ class CaseOp(Expression):
             elif when is TRUE:
                 m = w.then.partial_eval(lang).missing(lang)
             else:
-                m = self.lang[OrOp([
+                m = OrOp([
                     AndOp([when, w.then.partial_eval(lang).missing(lang)]),
                     m,
-                ])]
+                ])
         return m.partial_eval(lang)
 
     def invert(self, lang):
@@ -94,20 +94,20 @@ class CaseOp(Expression):
             elif when is FALSE:
                 pass
             else:
-                whens.append(self.lang[WhenOp(
+                whens.append(WhenOp(
                     when, **{"then": w.then.partial_eval(lang)}
-                )])
+                ))
         else:
             whens.append((self.whens[-1]).partial_eval(lang))
 
         if len(whens) == 1:
             return whens[0]
         elif len(whens) == 2:
-            return self.lang[WhenOp(
+            return WhenOp(
                 whens[0].when, **{"then": whens[0].then, "else": whens[1]}
-            )]
+            )
         else:
-            return self.lang[CaseOp(whens)]
+            return CaseOp(whens)
 
     @property
     def type(self):

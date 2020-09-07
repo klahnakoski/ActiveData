@@ -88,7 +88,7 @@ def _jx_expression(expr, lang):
     """
     if is_expression(expr):
         # CONVERT TO lang
-        new_op = lang[expr]
+        new_op = expr
         if not new_op:
             # CAN NOT BE FOUND, TRY SOME PARTIAL EVAL
             return language[expr.get_id()].partial_eval(lang)
@@ -104,7 +104,7 @@ def _jx_expression(expr, lang):
     elif expr.__class__ is Date:
         return Literal(expr.unix)
     elif is_sequence(expr):
-        return lang[TupleOp([_jx_expression(e, lang) for e in expr])]
+        return TupleOp([_jx_expression(e, lang) for e in expr])
 
     # expr = to_data(expr)
     try:

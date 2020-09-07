@@ -26,7 +26,7 @@ class CountOp(Expression):
         Expression.__init__(self, terms)
         if is_many(terms):
             # SHORTCUT: ASSUME AN ARRAY OF IS A TUPLE
-            self.terms = self.lang[TupleOp(terms)]
+            self.terms = TupleOp(terms)
         else:
             self.terms = terms
 
@@ -37,7 +37,7 @@ class CountOp(Expression):
         return self.terms.vars()
 
     def map(self, map_):
-        return self.lang[CountOp(self.terms.map(map_))]
+        return CountOp(self.terms.map(map_))
 
     def missing(self, lang):
         return FALSE

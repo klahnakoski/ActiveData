@@ -21,44 +21,31 @@ from jx_python.expressions.when_op import WhenOp
 
 
 class FindOp(FindOp_):
-
     def partial_eval(self, lang):
-        index = self.lang[
-            BasicIndexOfOp([self.value, self.find, self.start])
-        ].partial_eval(lang)
+        index = BasicIndexOfOp([self.value, self.find, self.start]).partial_eval(lang)
 
-        output = self.lang[
-            WhenOp(
-                OrOp(
-                    [
-                        self.value.missing(Python),
-                        self.find.missing(Python),
-                        BasicEqOp([index, Literal(-1)]),
-                    ]
-                ),
-                **{"then": self.default, "else": index}
-            )
-        ].partial_eval(lang)
+        output = WhenOp(
+            OrOp([
+                self.value.missing(Python),
+                self.find.missing(Python),
+                BasicEqOp([index, Literal(-1)]),
+            ]),
+            **{"then": self.default, "else": index}
+        ).partial_eval(lang)
         return output
 
     def missing(self, lang):
-        output = AndOp(
-            [
-                self.default.missing(Python),
-                OrOp(
-                    [
-                        self.value.missing(Python),
-                        self.find.missing(Python),
-                        EqOp(
-                            [
-                                BasicIndexOfOp([self.value, self.find, self.start]),
-                                Literal(-1),
-                            ]
-                        ),
-                    ]
-                ),
-            ]
-        ).partial_eval(lang)
+        output = AndOp([
+            self.default.missing(Python),
+            OrOp([
+                self.value.missing(Python),
+                self.find.missing(Python),
+                EqOp([
+                    BasicIndexOfOp([self.value, self.find, self.start]),
+                    Literal(-1),
+                ]),
+            ]),
+        ]).partial_eval(lang)
         return output
 
     def to_python(self, not_null=False, boolean=False, many=False):

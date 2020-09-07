@@ -57,7 +57,7 @@ class BaseBinaryOp(Expression):
         if self.default.exists():
             return FALSE
         else:
-            return self.lang[OrOp([self.lhs.missing(lang), self.rhs.missing(lang)])]
+            return OrOp([self.lhs.missing(lang), self.rhs.missing(lang)])
 
     def partial_eval(self, lang):
         lhs = self.lhs.partial_eval(lang)

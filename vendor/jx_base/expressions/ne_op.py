@@ -48,34 +48,34 @@ class NeOp(Expression):
         return self.lhs.vars() | self.rhs.vars()
 
     def map(self, map_):
-        return self.lang[NeOp([self.lhs.map(map_), self.rhs.map(map_)])]
+        return (NeOp([self.lhs.map(map_), self.rhs.map(map_)]))
 
     def missing(self, lang):
         return FALSE  # USING THE decisive EQUALITY https://github.com/mozilla/jx-sqlite/blob/master/docs/Logical%20Equality.md#definitions
 
     def invert(self, lang):
-        return self.lang[OrOp([
+        return OrOp([
             self.lhs.missing(lang),
             self.rhs.missing(lang),
             BasicEqOp([self.lhs, self.rhs]),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
     def partial_eval(self, lang):
         lhs = (self.lhs).partial_eval(lang)
         rhs = (self.rhs).partial_eval(lang)
 
         if is_op(lhs, NestedOp):
-            return self.lang[NestedOp(
+            return NestedOp(
                 path=lhs.path.partial_eval(lang),
                 select=IDENTITY,
                 where=AndOp([lhs.where, NeOp([lhs.select, rhs])]).partial_eval(lang),
                 sort=lhs.sort.partial_eval(lang),
                 limit=lhs.limit.partial_eval(lang),
-            )].partial_eval(lang)
+            ).partial_eval(lang)
 
-        output = self.lang[AndOp([
+        output =AndOp([
             lhs.exists(),
             rhs.exists(),
             NotOp(BasicEqOp([lhs, rhs])),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
         return output

@@ -36,9 +36,9 @@ class EqOp(Expression):
         items = terms.items()
         if len(items) == 1:
             if is_many(items[0][1]):
-                return cls.lang[InOp(items[0])]
+                return (InOp(items[0]))
             else:
-                return cls.lang[EqOp(items[0])]
+                return (EqOp(items[0]))
         else:
             acc = []
             for lhs, rhs in items:
@@ -46,7 +46,7 @@ class EqOp(Expression):
                     acc.append(InOp([Variable(lhs), rhs]))
                 else:
                     acc.append(EqOp([Variable(lhs), rhs]))
-            return cls.lang[AndOp(acc)]
+            return (AndOp(acc))
 
     def __init__(self, terms):
         Expression.__init__(self, terms)
@@ -67,7 +67,7 @@ class EqOp(Expression):
         return self.lhs.vars() | self.rhs.vars()
 
     def map(self, map_):
-        return self.lang[EqOp([self.lhs.map(map_), self.rhs.map(map_)])]
+        return EqOp([self.lhs.map(map_), self.rhs.map(map_)])
 
     def missing(self, lang):
         return FALSE
@@ -82,8 +82,8 @@ class EqOp(Expression):
         if is_literal(lhs) and is_literal(rhs):
             return FALSE if value_compare(lhs.value, rhs.value) else TRUE
         else:
-            return self.lang[self.lang[CaseOp([
+            return CaseOp([
                 WhenOp(lhs.missing(lang), **{"then": rhs.missing(lang)}),
                 WhenOp(rhs.missing(lang), **{"then": FALSE}),
                 BasicEqOp([lhs, rhs]),
-            ])]].partial_eval(lang)
+            ]).partial_eval(lang)

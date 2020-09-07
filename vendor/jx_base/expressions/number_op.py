@@ -41,7 +41,7 @@ class NumberOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[NumberOp(self.term.map(map_))]
+        return (NumberOp(self.term.map(map_)))
 
     def missing(self, lang):
         return self.term.missing(lang)
@@ -59,20 +59,20 @@ class NumberOp(Expression):
 
             v = term.value
             if isinstance(v, (text, Date)):
-                return self.lang[Literal(float(v))]
+                return (Literal(float(v)))
             elif isinstance(v, (int, float)):
                 return term
             else:
                 Log.error("can not convert {{value|json}} to number", value=term.value)
         elif is_op(term, CaseOp):  # REWRITING
-            return self.lang[CaseOp(
+            return CaseOp(
                 [WhenOp(t.when, **{"then": NumberOp(t.then)}) for t in term.whens[:-1]]
                 + [NumberOp(term.whens[-1])]
-            )].partial_eval(lang)
+            ).partial_eval(lang)
         elif is_op(term, WhenOp):  # REWRITING
-            return self.lang[WhenOp(
+            return WhenOp(
                 term.when, **{"then": NumberOp(term.then), "else": NumberOp(term.els_)}
-            )].partial_eval(lang)
+            ).partial_eval(lang)
         elif is_op(term, CoalesceOp):
-            return self.lang[CoalesceOp([NumberOp(t) for t in term.terms])]
-        return self.lang[NumberOp(term)]
+            return (CoalesceOp([NumberOp(t) for t in term.terms]))
+        return (NumberOp(term))

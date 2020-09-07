@@ -33,13 +33,13 @@ class ExistsOp(Expression):
         return self.expr.vars()
 
     def map(self, map_):
-        return self.lang[ExistsOp(self.expr.map(map_))]
+        return ExistsOp(self.expr.map(map_))
 
     def missing(self, lang):
         return FALSE
 
     def invert(self, lang):
-        return self.lang[self.expr].missing(lang)
+        return (self.expr).missing(lang)
 
     def exists(self):
         return TRUE

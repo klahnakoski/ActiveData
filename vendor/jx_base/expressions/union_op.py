@@ -44,7 +44,7 @@ class UnionOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[UnionOp([t.map(map_) for t in self.terms])]
+        return (UnionOp([t.map(map_) for t in self.terms]))
 
     def missing(self, lang):
         return FALSE
@@ -67,8 +67,8 @@ class UnionOp(Expression):
                 return Literal(minimum)
         else:
             if minimum == None:
-                output = self.lang[UnionOp(terms)]
+                output = (UnionOp(terms))
             else:
-                output = self.lang[UnionOp([Literal(minimum)] + terms)]
+                output = (UnionOp([Literal(minimum)] + terms))
 
         return output

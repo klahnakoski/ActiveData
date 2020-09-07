@@ -51,7 +51,7 @@ class AndOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[AndOp([t.map(map_) for t in self.terms])]
+        return AndOp([t.map(map_) for t in self.terms])
 
     def missing(self, lang):
         return FALSE
@@ -105,9 +105,9 @@ class AndOp(Expression):
             elif len(and_terms) == 1:
                 return and_terms[0]
             else:
-                return self.lang[AndOp(and_terms)]
+                return AndOp(and_terms)
 
-        return self.lang[OrOp([
+        return OrOp([
             AndOp(and_terms) if len(and_terms) > 1 else and_terms[0]
             for and_terms in or_terms
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)

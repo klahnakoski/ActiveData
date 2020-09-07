@@ -31,7 +31,7 @@ class BooleanOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[BooleanOp(self.term.map(map_))]
+        return BooleanOp(self.term.map(map_))
 
     def missing(self, lang):
         return self.term.missing(lang)
@@ -47,5 +47,5 @@ class BooleanOp(Expression):
         elif term is self.term:
             return self
 
-        exists = self.lang[term].exists().partial_eval(lang)
+        exists = term.exists().partial_eval(lang)
         return exists

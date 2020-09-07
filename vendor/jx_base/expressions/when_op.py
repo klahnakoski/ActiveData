@@ -54,22 +54,22 @@ class WhenOp(Expression):
         return self.when.vars() | self.then.vars() | self.els_.vars()
 
     def map(self, map_):
-        return self.lang[WhenOp(
+        return WhenOp(
             self.when.map(map_),
             **{"then": self.then.map(map_), "else": self.els_.map(map_)}
-        )]
+        )
 
     def missing(self, lang):
-        return self.lang[OrOp([
+        return OrOp([
             AndOp([self.when, self.then.missing(lang)]),
             AndOp([NotOp(self.when), self.els_.missing(lang)]),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
     def invert(self, lang):
-        return self.lang[OrOp([
+        return OrOp([
             AndOp([self.when, self.then.invert(lang)]),
             AndOp([NotOp(self.when), self.els_.invert(lang)]),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
     def partial_eval(self, lang):
         when = (BooleanOp(self.when)).partial_eval(lang)
@@ -95,7 +95,7 @@ class WhenOp(Expression):
             elif els_ is TRUE:
                 return (NotOp(when)).partial_eval(lang)
 
-        return self.lang[WhenOp(when, **{"then": then, "else": els_})]
+        return (WhenOp(when, **{"then": then, "else": els_}))
 
 
 export("jx_base.expressions.first_op", WhenOp)

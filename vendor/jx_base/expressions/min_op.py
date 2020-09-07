@@ -44,7 +44,7 @@ class MinOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[MinOp([t.map(map_) for t in self.terms])]
+        return (MinOp([t.map(map_) for t in self.terms]))
 
     def missing(self, lang):
         return FALSE
@@ -67,8 +67,8 @@ class MinOp(Expression):
                 return Literal(minimum)
         else:
             if minimum == None:
-                output = self.lang[MinOp(terms)]
+                output = (MinOp(terms))
             else:
-                output = self.lang[MinOp([Literal(minimum)] + terms)]
+                output = (MinOp([Literal(minimum)] + terms))
 
         return output

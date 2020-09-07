@@ -47,10 +47,10 @@ class NotRightOp(Expression):
         return self.value.vars() | self.length.vars()
 
     def map(self, map_):
-        return self.lang[NotRightOp([self.value.map(map_), self.length.map(map_)])]
+        return (NotRightOp([self.value.map(map_), self.length.map(map_)]))
 
     def missing(self, lang):
-        return self.lang[OrOp([self.value.missing(lang), self.length.missing(lang)])]
+        return (OrOp([self.value.missing(lang), self.length.missing(lang)]))
 
     def partial_eval(self, lang):
         value = (self.value).partial_eval(lang)

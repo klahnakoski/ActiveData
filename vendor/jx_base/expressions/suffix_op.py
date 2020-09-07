@@ -64,7 +64,7 @@ class SuffixOp(Expression):
         if self.expr is None:
             return TRUE
         else:
-            return self.lang[SuffixOp([self.expr.map(map_), self.suffix.map(map_)])]
+            return (SuffixOp([self.expr.map(map_), self.suffix.map(map_)]))
 
     def partial_eval(self, lang):
         if self.expr is None:
@@ -73,12 +73,12 @@ class SuffixOp(Expression):
             Log.error("can only hanlde literal suffix ")
 
         return WhenOp(
-            self.lang[AndOp([self.expr.exists(), self.suffix.exists()])],
+            (AndOp([self.expr.exists(), self.suffix.exists()])),
             **{
-                "then": self.lang[RegExpOp([
+                "then": RegExpOp([
                     self.expr,
                     Literal(".*" + re.escape(self.suffix.value)),
-                ])],
+                ]),
                 "else": FALSE,
             }
         ).partial_eval(lang)

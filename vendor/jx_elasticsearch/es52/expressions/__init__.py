@@ -1,5 +1,6 @@
 from jx_elasticsearch.es52.expressions.and_op import AndOp, es_and
 from jx_elasticsearch.es52.expressions.basic_eq_op import BasicEqOp
+from jx_elasticsearch.es52.expressions.basic_in_op import BasicInOp
 from jx_elasticsearch.es52.expressions.basic_starts_with_op import BasicStartsWithOp
 from jx_elasticsearch.es52.expressions.boolean_op import BooleanOp
 from jx_elasticsearch.es52.expressions.case_op import CaseOp

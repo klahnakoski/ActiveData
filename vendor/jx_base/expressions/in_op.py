@@ -37,7 +37,7 @@ class InOp(Expression):
         if is_op(terms[0], Variable) and is_op(terms[1], Literal):
             name, value = terms
             if not is_many(value.value):
-                return cls.lang[EqOp([name, Literal([value.value])])]
+                return (EqOp([name, Literal([value.value])]))
         return object.__new__(cls)
 
     def __init__(self, term):
@@ -59,7 +59,7 @@ class InOp(Expression):
         return self.value.vars()
 
     def map(self, map_):
-        return self.lang[InOp([self.value.map(map_), self.superset.map(map_)])]
+        return (InOp([self.value.map(map_), self.superset.map(map_)]))
 
     def partial_eval(self, lang):
         value = self.value.partial_eval(lang)
@@ -73,7 +73,7 @@ class InOp(Expression):
         elif is_op(value, NestedOp):
             return NestedOp(value.path, None, AndOp([InOp([value.select, superset]), value.where])).exists().partial_eval(lang)
         else:
-            return self.lang[InOp([value, superset])]
+            return (InOp([value, superset]))
 
     def __call__(self, row):
         return self.value(row) in self.superset(row)

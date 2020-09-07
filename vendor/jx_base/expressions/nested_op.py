@@ -43,14 +43,14 @@ class NestedOp(Expression):
 
     def partial_eval(self, lang):
         if self.missing(lang) is TRUE:
-            return self.lang[NestedOp(path=self.path.partial_eval(lang), where=FALSE)]
-        return self.lang[NestedOp(
+            return (NestedOp(path=self.path.partial_eval(lang), where=FALSE))
+        return NestedOp(
             self.path.partial_eval(lang),
             self.select.partial_eval(lang),
             self.where.partial_eval(lang),
             self.sort.partial_eval(lang),
             self.limit.partial_eval(lang),
-        )]
+        )
 
     def __and__(self, other):
         """
@@ -121,12 +121,12 @@ class NestedOp(Expression):
         return self.missing(lang)
 
     def missing(self, lang):
-        return self.lang[OrOp([
+        return OrOp([
             NotOp(self.where),
             # self.path.missing(lang), ASSUME PATH TO TABLES, WHICH ASSUMED TO HAVE DATA (EXISTS)
             # self.select.missing(lang),
             EqOp([self.limit, ZERO]),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
     @property
     def many(self):

@@ -33,7 +33,7 @@ class Literal(Expression):
             return FALSE
         if is_data(term) and term.get("date"):
             # SPECIAL CASE
-            return cls.lang[DateOp(term.get("date"))]
+            return (DateOp(term.get("date")))
         return object.__new__(cls)
 
     def __init__(self, value):

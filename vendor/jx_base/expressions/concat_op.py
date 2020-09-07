@@ -46,7 +46,7 @@ class ConcatOp(Expression):
         else:
             terms = [jx_expression(t) for t in terms]
 
-        return cls.lang[ConcatOp(
+        return ConcatOp(
             terms,
             **{
                 k: Literal(v)
@@ -55,7 +55,7 @@ class ConcatOp(Expression):
                 for k, v in expr.items()
                 if k in ["default", "separator"]
             }
-        )]
+        )
 
     def partial_eval(self, lang):
         terms = []
@@ -65,7 +65,7 @@ class ConcatOp(Expression):
                 terms.append(tt)
 
         if terms:
-            return self.lang[ConcatOp(terms, self.separator, self.default,)]
+            return ConcatOp(terms, self.separator, self.default,)
         elif len(terms) == 1:
             return terms[0]
         else:
@@ -90,13 +90,13 @@ class ConcatOp(Expression):
         return set.union(*(t.vars() for t in self.terms))
 
     def map(self, map_):
-        return self.lang[ConcatOp(
+        return ConcatOp(
             [t.map(map_) for t in self.terms],
             self.separator.map(map_),
             self.default.map(map_),
-        )]
+        )
 
     def missing(self, lang):
-        return self.lang[AndOp(
+        return AndOp(
             [t.missing(lang) for t in self.terms] + [self.default.missing(lang)]
-        )].partial_eval(lang)
+        ).partial_eval(lang)

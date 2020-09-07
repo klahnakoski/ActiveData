@@ -35,7 +35,7 @@ class StringOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[StringOp(self.term.map(map_))]
+        return (StringOp(self.term.map(map_)))
 
     def missing(self, lang):
         return self.term.missing(lang)
@@ -48,14 +48,14 @@ class StringOp(Expression):
         if is_op(term, StringOp):
             return term.term.partial_eval(lang)
         elif is_op(term, CoalesceOp):
-            return self.lang[CoalesceOp([
+            return CoalesceOp([
                 (StringOp(t)).partial_eval(lang) for t in term.terms
-            ])]
+            ])
         elif is_literal(term):
             if term.type == STRING:
                 return term
             else:
-                return self.lang[Literal(mo_json.value2json(term.value))]
+                return (Literal(mo_json.value2json(term.value)))
         return self
 
     def __eq__(self, other):

@@ -66,17 +66,17 @@ class PrefixOp(Expression):
         if self.expr is NULL:
             return self
         else:
-            return self.lang[PrefixOp(self.expr.map(map_), self.prefix.map(map_))]
+            return (PrefixOp(self.expr.map(map_), self.prefix.map(map_)))
 
     def missing(self, lang):
         return FALSE
 
     def partial_eval(self, lang):
-        return self.lang[CaseOp([
+        return CaseOp([
             WhenOp(self.prefix.missing(lang), then=TRUE),
             WhenOp(self.expr.missing(lang), then=FALSE),
             BasicStartsWithOp([self.expr, self.prefix]),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
     def __eq__(self, other):
         if not is_op(other, PrefixOp):

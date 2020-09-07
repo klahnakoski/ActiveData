@@ -59,20 +59,20 @@ class BaseMultiOp(Expression):
     def missing(self, lang):
         if self.nulls:
             if self.default is NULL:
-                return self.lang[AndOp([t.missing(lang) for t in self.terms])]
+                return AndOp([t.missing(lang) for t in self.terms])
             else:
                 return TRUE
         else:
             if self.default is NULL:
-                return self.lang[OrOp([t.missing(lang) for t in self.terms])]
+                return OrOp([t.missing(lang) for t in self.terms])
             else:
                 return FALSE
 
     def exists(self):
         if self.nulls:
-            return self.lang[OrOp([t.exists() for t in self.terms])]
+            return OrOp([t.exists() for t in self.terms])
         else:
-            return self.lang[AndOp([t.exists() for t in self.terms])]
+            return AndOp([t.exists() for t in self.terms])
 
     def partial_eval(self, lang):
         acc = None
@@ -94,13 +94,13 @@ class BaseMultiOp(Expression):
             if acc == None:
                 return self.default.partial_eval(lang)
             else:
-                return lang[Literal(acc)]
+                return Literal(acc)
         elif self.nulls:
             # DECISIVE
             if acc is not None:
                 terms.append(Literal(acc))
 
-            output = lang[WhenOp(
+            output = WhenOp(
                 AndOp([t.missing(lang) for t in terms]),
                 **{
                     "then": self.default,
@@ -108,16 +108,16 @@ class BaseMultiOp(Expression):
                         CoalesceOp([t, _jx_identity[self.op]]) for t in terms
                     ]),
                 }
-            )].partial_eval(lang)
+            ).partial_eval(lang)
         else:
             # CONSERVATIVE
             if acc is not None:
-                terms.append(lang[Literal(acc)])
+                terms.append(Literal(acc))
 
-            output = lang[WhenOp(
-                lang[OrOp([t.missing(lang) for t in terms])],
+            output = WhenOp(
+                OrOp([t.missing(lang) for t in terms]),
                 **{"then": self.default, "else": operators["basic." + self.op](terms),}
-            )].partial_eval(lang)
+            ).partial_eval(lang)
 
         return output
 

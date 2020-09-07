@@ -31,7 +31,7 @@ class IsNumberOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[IsNumberOp(self.term.map(map_))]
+        return (IsNumberOp(self.term.map(map_)))
 
     def missing(self, lang):
         return FALSE

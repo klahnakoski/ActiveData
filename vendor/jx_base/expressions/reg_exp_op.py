@@ -31,7 +31,7 @@ class RegExpOp(Expression):
         return {self.var}
 
     def map(self, map_):
-        return self.lang[RegExpOp([self.var.map(map_), self.pattern])]
+        return (RegExpOp([self.var.map(map_), self.pattern]))
 
     def missing(self, lang):
         return FALSE

@@ -56,14 +56,14 @@ class SplitOp(Expression):
         find = self.find.to_es_script(not_null=True)
         index = v + ".indexOf(" + find + ", " + self.start.to_es_script() + ")"
 
-        return self.lang[AndOp([
+        return AndOp([
             self.default.missing(lang),
             OrOp([
                 self.value.missing(lang),
                 self.find.missing(lang),
                 EqOp([ScriptOp(index), Literal(-1)]),
             ]),
-        ])]
+        ])
 
     def exists(self):
         return TRUE

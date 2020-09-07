@@ -149,7 +149,7 @@ class Expression(BaseExpression):
         elif inv is FALSE:
             return TRUE
         else:
-            return self.lang[NotOp(inv)]
+            return (NotOp(inv))
 
     def partial_eval(self, lang):
         """

@@ -36,7 +36,7 @@ class CoalesceOp(Expression):
 
     def missing(self, lang):
         # RETURN true FOR RECORDS THE WOULD RETURN NULL
-        return self.lang[AndOp([v.missing(lang) for v in self.terms])]
+        return AndOp([v.missing(lang) for v in self.terms])
 
     def vars(self):
         output = set()
@@ -45,7 +45,7 @@ class CoalesceOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[CoalesceOp([v.map(map_) for v in self.terms])]
+        return CoalesceOp([v.map(map_) for v in self.terms])
 
     def partial_eval(self, lang):
         terms = []
@@ -64,4 +64,4 @@ class CoalesceOp(Expression):
         elif len(terms) == 1:
             return terms[0]
         else:
-            return self.lang[CoalesceOp(terms)]
+            return CoalesceOp(terms)

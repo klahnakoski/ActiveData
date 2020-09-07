@@ -34,7 +34,7 @@ class AbsOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[AbsOp(self.term.map(map_))]
+        return AbsOp(self.term.map(map_))
 
     def missing(self, lang):
         return self.term.missing(lang)

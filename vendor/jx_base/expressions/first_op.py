@@ -34,7 +34,7 @@ class FirstOp(Expression):
         return self.term.vars()
 
     def map(self, map_):
-        return self.lang[LastOp(self.term.map(map_))]
+        return (LastOp(self.term.map(map_)))
 
     def missing(self, lang):
         return self.term.missing(lang)
@@ -44,17 +44,17 @@ class FirstOp(Expression):
         if is_op(term, FirstOp):
             return term
         elif is_op(term, CaseOp):  # REWRITING
-            return self.lang[CaseOp(
+            return CaseOp(
                 [WhenOp(t.when, **{"then": FirstOp(t.then)}) for t in term.whens[:-1]]
                 + [FirstOp(term.whens[-1])]
-            )].partial_eval(lang)
+            ).partial_eval(lang)
         elif is_op(term, WhenOp):
-            return self.lang[WhenOp(
+            return WhenOp(
                 term.when, **{"then": FirstOp(term.then), "else": FirstOp(term.els_)}
-            )].partial_eval(lang)
+            ).partial_eval(lang)
         elif term.type != OBJECT and not term.many:
             return term
         elif is_literal(term):
             Log.error("not handled yet")
         else:
-            return self.lang[FirstOp(term)]
+            return (FirstOp(term))

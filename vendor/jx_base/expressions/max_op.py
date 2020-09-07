@@ -41,7 +41,7 @@ class MaxOp(Expression):
         return output
 
     def map(self, map_):
-        return self.lang[MaxOp([t.map(map_) for t in self.terms])]
+        return (MaxOp([t.map(map_) for t in self.terms]))
 
     def missing(self, lang):
         return FALSE
@@ -64,8 +64,8 @@ class MaxOp(Expression):
                 return Literal(maximum)
         else:
             if maximum == None:
-                output = self.lang[MaxOp(terms)]
+                output = (MaxOp(terms))
             else:
-                output = self.lang[MaxOp([Literal(maximum)] + terms)]
+                output = (MaxOp([Literal(maximum)] + terms))
 
         return output

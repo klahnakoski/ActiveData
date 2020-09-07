@@ -90,6 +90,6 @@ class InnerJoinOp(Expression):
                 return NULL  # IF ANY ARE MISSING, THEN self IS MISSING
             nests.append(n)
 
-        return self.lang[InnerJoinOp(
+        return InnerJoinOp(
             frum=self.frum, nests=[n.partial_eval(lang) for n in self.nests],
-        )]
+        )

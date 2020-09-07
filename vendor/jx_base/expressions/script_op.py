@@ -37,7 +37,7 @@ class ScriptOp(Expression):
                 " = {{script|quote}}",
                 script=expr.script.term,
             )
-            return cls.lang[ScriptOp(expr.script)]
+            return (ScriptOp(expr.script))
         else:
             Log.error("scripting is disabled")
 

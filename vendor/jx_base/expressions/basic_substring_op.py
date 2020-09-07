@@ -34,11 +34,11 @@ class BasicSubstringOp(Expression):
         ]}
 
     def map(self, map_):
-        return self.lang[BasicSubstringOp([
+        return BasicSubstringOp([
             self.value.map(map_),
             self.start.map(map_),
             self.end.map(map_),
-        ])]
+        ])
 
     def vars(self):
         return self.value.vars() | self.start.vars() | self.end.vars()

@@ -34,7 +34,7 @@ class BasicInOp(Expression):
         if is_op(terms[0], Variable) and is_op(terms[1], Literal):
             name, value = terms
             if not is_many(value.value):
-                return cls.lang[EqOp([name, Literal([value.value])])]
+                return (EqOp([name, Literal([value.value])]))
         return object.__new__(cls)
 
     def __init__(self, term):
@@ -72,7 +72,7 @@ class BasicInOp(Expression):
         elif is_op(value, NestedOp):
             return NestedOp(value.path, None, AndOp([BasicInOp([value.select, superset]), value.where])).exists().partial_eval(lang)
         else:
-            return lang[BasicInOp([value, superset])]
+            return lang.BasicInOp([value, superset])
 
     def __call__(self, row):
         value = self.value(row)

@@ -97,7 +97,7 @@ class Variable(Expression):
         if self.var == "_id":
             return FALSE
         else:
-            return self.lang[MissingOp(self)]
+            return (MissingOp(self))
 
 
 IDENTITY = Variable(".")

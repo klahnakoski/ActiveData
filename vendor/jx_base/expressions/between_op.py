@@ -49,23 +49,23 @@ class BetweenOp(Expression):
     def define(cls, expr):
         term = expr.between
         if is_sequence(term):
-            return cls.lang[BetweenOp(
+            return BetweenOp(
                 value=jx_expression(term[0]),
                 prefix=jx_expression(term[1]),
                 suffix=jx_expression(term[2]),
                 default=jx_expression(expr.default),
                 start=jx_expression(expr.start),
-            )]
+            )
         elif is_data(term):
             var, vals = term.items()[0]
             if is_sequence(vals) and len(vals) == 2:
-                return cls.lang[BetweenOp(
+                return BetweenOp(
                     value=Variable(var),
                     prefix=Literal(vals[0]),
                     suffix=Literal(vals[1]),
                     default=jx_expression(expr.default),
                     start=jx_expression(expr.start),
-                )]
+                )
             else:
                 Log.error(
                     "`between` parameters are expected to be in {var: [prefix, suffix]}"
@@ -120,19 +120,19 @@ class BetweenOp(Expression):
     def partial_eval(self, lang):
         value = self.value.partial_eval(lang)
 
-        start_index = self.lang[CaseOp([
+        start_index = CaseOp([
             WhenOp(self.prefix.missing(lang), **{"then": ZERO}),
             WhenOp(IsNumberOp(self.prefix), **{"then": MaxOp([ZERO, self.prefix])}),
             FindOp([value, self.prefix], start=self.start),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
-        len_prefix = self.lang[CaseOp([
+        len_prefix = CaseOp([
             WhenOp(self.prefix.missing(lang), **{"then": ZERO}),
             WhenOp(IsNumberOp(self.prefix), **{"then": ZERO}),
             LengthOp(self.prefix),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
-        end_index = self.lang[CaseOp([
+        end_index = CaseOp([
             WhenOp(start_index.missing(lang), **{"then": NULL}),
             WhenOp(self.suffix.missing(lang), **{"then": LengthOp(value)}),
             WhenOp(
@@ -140,13 +140,13 @@ class BetweenOp(Expression):
                 **{"then": MinOp([self.suffix, LengthOp(value)])}
             ),
             FindOp([value, self.suffix], start=AddOp([start_index, len_prefix])),
-        ])].partial_eval(lang)
+        ]).partial_eval(lang)
 
         start_index = AddOp([start_index, len_prefix]).partial_eval(lang)
         substring = BasicSubstringOp([value, start_index, end_index]).partial_eval(lang)
 
-        between = self.lang[WhenOp(
+        between = WhenOp(
             end_index.missing(lang), **{"then": self.default, "else": substring}
-        )].partial_eval(lang)
+        ).partial_eval(lang)
 
         return between
