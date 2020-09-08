@@ -55,6 +55,9 @@ class OrOp(Expression):
             return False
         return all(t == u for t, u in zip(self.terms, other.terms))
 
+    def __contains__(self, item):
+        return any(item in t for t in self.terms)
+
     def partial_eval(self, lang):
         terms = []
         ands = []

@@ -23,8 +23,8 @@ from mo_json import BOOLEAN, OBJECT, value2json
 from mo_logs import Log
 from mo_threads import register_thread
 
-TRUE, FALSE, Literal, is_literal, MissingOp, NotOp, NULL, Variable = expect(
-    "TRUE", "FALSE", "Literal", "is_literal", "MissingOp", "NotOp", "NULL", "Variable"
+TRUE, FALSE, Literal, is_literal, MissingOp, NotOp, NULL, Variable, AndOp = expect(
+    "TRUE", "FALSE", "Literal", "is_literal", "MissingOp", "NotOp", "NULL", "Variable", "AndOp"
 )
 
 
@@ -170,6 +170,16 @@ class Expression(BaseExpression):
         self_class = self.__class__
         Log.note("this is slow on {{type}}", type=text(self_class.__name__))
         return self.__data__() == other.__data__()
+
+    def __contains__(self, item):
+        return item.__rcontains__(self)
+
+    def __rcontains__(self, superset):
+        """
+        :param superset: A FILTER (RETURNS BOOLEAN)
+        :return: True IF superset RETURNS True WHEN self RETURNS True
+        """
+        return self.__eq__(superset)
 
     @register_thread
     def __str__(self):

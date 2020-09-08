@@ -10,6 +10,8 @@
 
 from __future__ import absolute_import, division, unicode_literals
 
+from jx_base.expressions.missing_op import MissingOp
+
 from jx_base.expressions.and_op import AndOp
 from jx_base.expressions.eq_op import EqOp
 from jx_base.expressions.expression import Expression
@@ -94,3 +96,13 @@ class BasicInOp(Expression):
             return inv
         else:
             return this.invert(lang)
+
+    def __rcontains__(self, superset):
+        if (
+            is_op(self.value, Variable)
+            and is_op(superset, MissingOp)
+            and is_op(superset.value, Variable)
+            and superset.value.var == self.value.var
+        ):
+            return True
+        return self.__eq__(superset)

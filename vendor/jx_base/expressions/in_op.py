@@ -90,5 +90,15 @@ class InOp(Expression):
         else:
             return this.invert(lang)
 
+    def __rcontains__(self, superset):
+        if (
+            is_op(self.value, Variable)
+            and is_op(superset, MissingOp)
+            and is_op(superset.value, Variable)
+            and superset.value.var == self.value.var
+        ):
+            return True
+        return False
+
 
 export("jx_base.expressions.eq_op", InOp)

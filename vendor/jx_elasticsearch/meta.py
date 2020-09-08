@@ -829,10 +829,9 @@ class ElasticsearchMetadata(Namespace):
                         if column.jx_type == EXISTS:
                             pass  # WE MUST PROBE ES TO SEE IF STILL EXISTS
                         elif column.jx_type in STRUCT:
-                            if (
-                                column.es_type == "nested"
-                                or last(split_field(column.es_column)) == NESTED_TYPE
-                            ) and (column.multi == None or column.multi < 2):
+                            if column.es_type == "nested" and (
+                                column.multi == None or column.multi < 2
+                            ):
                                 column.multi = 1001
                                 Log.warning("fixing multi on nested problem")
 
@@ -998,7 +997,9 @@ class Schema(jx_base.Schema):
         self.snowflake = snowflake
         try:
             path = first(
-                p for p in snowflake.query_paths if p[0] == query_path or untype_path(p[0]) == query_path
+                p
+                for p in snowflake.query_paths
+                if p[0] == query_path or untype_path(p[0]) == query_path
             )
             if path:
                 # WE DO NOT NEED TO LOOK INTO MULTI-VALUED FIELDS AS A TABLE
@@ -1052,7 +1053,9 @@ class Schema(jx_base.Schema):
         :return: ALL COLUMNS THAT START WITH column_name, NOT INCLUDING DEEPER NESTED COLUMNS
         """
         split_variables = self.split_values(column_name, exclude_type=exclude_type)
-        new_output = set(flatten(self.split_leaves(c, exclude_type) for c in split_variables.values() if c))
+        new_output = set(flatten(
+            self.split_leaves(c, exclude_type) for c in split_variables.values() if c
+        ))
 
         clean_name = untype_path(column_name)
         columns = self.columns
@@ -1067,7 +1070,7 @@ class Schema(jx_base.Schema):
                 and c.jx_type not in exclude_type
             )
             if new_output != output:
-               Log.alert("inspect me")
+                Log.alert("inspect me")
             return output
 
         if clean_name != column_name:
@@ -1084,10 +1087,10 @@ class Schema(jx_base.Schema):
                 )
                 if output:
                     if new_output != output:
-                       Log.alert("inspect me")
+                        Log.alert("inspect me")
                     return set(output)
             if new_output != set():
-               Log.alert("inspect me")
+                Log.alert("inspect me")
             return set()
 
         # TODO: HOW TO REFER TO FIELDS THAT MAY BE SHADOWED BY A RELATIVE NAME?
@@ -1106,7 +1109,7 @@ class Schema(jx_base.Schema):
                     )
                 )
                 if new_output != output:
-                   Log.alert("inspect me")
+                    Log.alert("inspect me")
                 return set(output)
 
             output = set(
@@ -1126,10 +1129,10 @@ class Schema(jx_base.Schema):
             )
             if output:
                 if new_output != output:
-                   Log.alert("inspect me")
+                    Log.alert("inspect me")
                 return set(output)
         if new_output != set():
-           Log.alert("inspect me")
+            Log.alert("inspect me")
         return set()
 
     def split_leaves(self, column, exclude_type=(OBJECT, EXISTS)):
@@ -1177,11 +1180,11 @@ class Schema(jx_base.Schema):
                     if c.name == full_path:
                         output.append(c)
                 if output:
-                    if set(new_output)!=set(output):
-                       Log.alert("inspect me")
+                    if set(new_output) != set(output):
+                        Log.alert("inspect me")
                     return output
             if new_output:
-               Log.alert("inspect me")
+                Log.alert("inspect me")
             return []
 
         output = []
@@ -1196,10 +1199,10 @@ class Schema(jx_base.Schema):
                     output.append(c)
             if output:
                 if set(new_output) != set(output):
-                   Log.alert("inspect me")
+                    Log.alert("inspect me")
                 return output
         if new_output:
-           Log.alert("inspect me")
+            Log.alert("inspect me")
         return []
 
     def split_values(self, column_name, exclude_type=(EXISTS,)):
@@ -1211,7 +1214,7 @@ class Schema(jx_base.Schema):
         if column_name == "_id":
             for c in columns:
                 if c.name == "_id":
-                    output['.'] = c
+                    output["."] = c
                     return output
 
         clean_name = untype_path(column_name)
@@ -1222,9 +1225,10 @@ class Schema(jx_base.Schema):
         arm = [
             p[0]
             for p in self.snowflake.query_paths
-            if startswith_field(p[0], query_table) or startswith_field(query_table, p[0])
+            if startswith_field(p[0], query_table)
+            or startswith_field(query_table, p[0])
         ]
-        search_order = query_path + list(reversed(arm[:-len(query_path)]))
+        search_order = query_path + list(reversed(arm[: -len(query_path)]))
 
         if clean_name != column_name:
             # SPECIFIC FIELD REQUESTED
@@ -1275,7 +1279,9 @@ class Schema(jx_base.Schema):
                         output[np] = c
                         # ENSURE ORDER IS MAINTAINED
                         if len(output) > 1:
-                            output = OrderedDict((p, v) for p in arm for v in [output.get(p)] if v)
+                            output = OrderedDict(
+                                (p, v) for p in arm for v in [output.get(p)] if v
+                            )
                     elif startswith_field(best.name, c.name):
                         output[np] = c
             if found:

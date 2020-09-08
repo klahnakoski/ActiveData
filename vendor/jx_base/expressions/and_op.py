@@ -17,7 +17,7 @@ from jx_base.expressions.true_op import TRUE
 from jx_base.language import is_op
 from mo_dots import is_many
 from mo_future import zip_longest
-from mo_imports import expect
+from mo_imports import expect, export
 from mo_json import BOOLEAN
 
 NotOp, OrOp = expect("NotOp", "OrOp")
@@ -41,8 +41,11 @@ class AndOp(Expression):
 
     def __eq__(self, other):
         if is_op(other, AndOp):
-            return all(a == b for a, b in zip_longest(self.terms, other.terms))
+            return all(o in self.terms for o in other.terms) and all(s in other.terms for s in self.terms)
         return False
+
+    def __rcontains__(self, superset):
+        return any(t in superset for t in self.terms)
 
     def vars(self):
         output = set()
@@ -111,3 +114,6 @@ class AndOp(Expression):
             AndOp(and_terms) if len(and_terms) > 1 else and_terms[0]
             for and_terms in or_terms
         ]).partial_eval(lang)
+
+
+export("jx_base.expressions.expression", AndOp)

@@ -30,7 +30,7 @@ from jx_elasticsearch.es52.painless.es_script import es_script
 from mo_dots import Null, to_data, join_field, split_field, coalesce, startswith_field
 from mo_future import first
 from mo_imports import expect, delay_import
-from mo_json import EXISTS
+from mo_json import EXISTS, INTERNAL
 from mo_json.typed_encoder import EXISTS_TYPE, NESTED_TYPE
 from mo_logs import Log
 from mo_math import MAX
@@ -144,10 +144,10 @@ def split_nested_inner_variables(where, query_table, var_to_columns):
             nested_table = col.nested_path[0]
             for e in wheres:
                 acc = []
-                for other in cols:
-                    if other != col:
-                        acc.append(e.map({v: NULL}))
-                        acc.append(MissingOp(Variable(other.es_column)))
+                # for other in cols:
+                #     if other != col:
+                #         acc.append(e.map({v: NULL}))
+                #         acc.append(MissingOp(Variable(other.es_column)))
 
                 if startswith_field(query_table, nested_table):
                     exists = e.map({v: Variable(
@@ -271,50 +271,56 @@ def _split_expression(expr, schema, all_paths):
     :param expr: JSON EXPRESSION
     :return: ARRAY INDEX BY (CONCAT, OUTER JOIN, AND)
     """
-    expr = expr.partial_eval(ES52)
+    simple_expr = expr.partial_eval(ES52)
 
-    if is_op(expr, AndOp):
+    if is_op(simple_expr, AndOp):
         acc = [tuple([] for _ in all_paths)]
-        for t in expr.terms:
+        for t in simple_expr.terms:
             next = []
             for c in _split_expression(t, schema, all_paths):
                 for a in acc:
                     next.append(tuple(n + an for n, an in zip(c, a)))
             acc = next
         return acc
-    elif is_op(expr, OrOp):
+    elif is_op(simple_expr, OrOp):
+        nests = list(reversed(sorted(set(n for v in simple_expr.vars() for n, c in schema.split_values(v.var).items()))))
+        if len(nests) == 1:
+            # IF ALL SAME NESTED LEVEL, THE USE OrOp
+            acc = [tuple([simple_expr] if p in nests else [] for p in all_paths)]
+            return acc
+
         output = []
-        exclude = []
-        for t in expr.terms:
-            for c in _split_expression(AndOp([AndOp(exclude), t]), schema, all_paths):
+        exclude = TRUE
+        for t in simple_expr.terms:
+            for c in _split_expression(AndOp([exclude, t]), schema, all_paths):
                 output.append(c)
-            exclude.append(NotOp(t))
+            exclude = AndOp([exclude, NotOp(t)]).partial_eval(ES52)
         return output
-    elif is_op(expr, NestedOp):
+    elif is_op(simple_expr, NestedOp):
         acc = tuple(
-            [expr.where] if p == expr.path.var else [] for i, p in enumerate(all_paths)
+            [simple_expr.where] if p == simple_expr.path.var else [] for i, p in enumerate(all_paths)
         )
         return [acc]
-    elif is_op(expr, NotOp):
+    elif is_op(simple_expr, NotOp):
         acc = [
             tuple([NotOp(a) for a in o] for o in t)
-            for t in _split_expression(expr.term, schema, all_paths)
+            for t in _split_expression(simple_expr.term, schema, all_paths)
         ]
         return acc
 
-    new_nests = list(set(n for v in expr.vars() for n, c in schema.split_values(v.var).items() if c))
+    new_nests = list(set(n for v in simple_expr.vars() for n, c in schema.split_values(v.var).items() if c))
 
     all_nests = list(set(
-        c.nested_path[0] for v in expr.vars() for c in schema.values(v.var)
+        c.nested_path[0] for v in simple_expr.vars() for c in schema.values(v.var)
     ))
 
     if set(new_nests) != set(all_nests):
         Log.alert("inspect me")
 
     if not all_nests:
-        return [tuple([expr] if p == "." else [] for p in all_paths)]
+        return [tuple([simple_expr] if p == "." else [] for p in all_paths)]
     elif len(all_nests) == 1:
-        return [tuple([expr] if p == all_nests[0] else [] for p in all_paths)]
+        return [tuple([simple_expr] if p == all_nests[0] else [] for p in all_paths)]
     else:
         Log.error("do not know how to handle")
 

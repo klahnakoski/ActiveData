@@ -3,6 +3,7 @@ from jx_elasticsearch.es52.painless.add_op import AddOp
 from jx_elasticsearch.es52.painless.and_op import AndOp
 from jx_elasticsearch.es52.painless.basic_add_op import BasicAddOp
 from jx_elasticsearch.es52.painless.basic_eq_op import BasicEqOp
+from jx_elasticsearch.es52.painless.basic_in_op import BasicInOp
 from jx_elasticsearch.es52.painless.basic_index_of_op import BasicIndexOfOp
 from jx_elasticsearch.es52.painless.basic_mul_op import BasicMulOp
 from jx_elasticsearch.es52.painless.basic_starts_with_op import BasicStartsWithOp

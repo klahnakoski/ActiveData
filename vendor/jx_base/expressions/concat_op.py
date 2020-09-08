@@ -72,11 +72,13 @@ class ConcatOp(Expression):
             return self.default
 
     def __data__(self):
-        f, s = self.terms[0], self.terms[1]
-        if is_op(f, Variable) and is_literal(s):
-            output = {"concat": {f.var: s.value}}
+        terms = self.terms
+        if len(terms) == 0:
+            return self.default.__data__()
+        if len(terms) == 2 and is_op(terms[0], Variable) and is_literal(terms[1]):
+            output = {"concat": {terms[0].var: terms[1].value}}
         else:
-            output = {"concat": [t.__data__() for t in self.terms]}
+            output = {"concat": [t.__data__() for t in terms]}
         if self.separator.json != '""':
             output["separator"] = self.separator.__data__()
         return output

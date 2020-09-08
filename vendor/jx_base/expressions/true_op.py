@@ -62,6 +62,9 @@ class TrueOp(Literal):
     def __bool__(self):
         return True
 
+    def __rcontains__(self, superset):
+        return self is superset
+
     def __nonzero__(self):
         return True
 

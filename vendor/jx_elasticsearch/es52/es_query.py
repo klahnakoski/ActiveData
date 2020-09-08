@@ -7,6 +7,7 @@
 #
 from __future__ import absolute_import, division, unicode_literals
 
+from jx_base.expressions import TRUE
 from jx_elasticsearch.es52.expressions import ES52
 from mo_dots import is_data, is_list, startswith_field, dict_to_data
 from mo_future import text
@@ -290,15 +291,15 @@ def simplify(aggs):
                 if prev is not None:
                     remove.append(prev)
                     prev = None
-                if current_nested is not None:
-                    if current_nested.path == step.path:
-                        remove.append(step)
-                        continue
-                    else:
-                        pass
+                if current_nested.path == step.path:
+                    remove.append(step)
+                    continue
                 prev = step
-            else:
-                current_nested = prev if prev else current_nested
+            elif isinstance(step, FilterAggs) and step.filter is TRUE:
+                remove.append(step)
+                continue
+            elif prev:
+                current_nested = prev
                 prev = None
 
         combined.append(tuple(p for p in path if not any(p is r for r in remove)))
