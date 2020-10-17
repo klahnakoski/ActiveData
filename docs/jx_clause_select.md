@@ -400,6 +400,44 @@ The star can be used on the end of a path. The path is not flattened, but the st
 </td></tr></table>
 
 
-# Aggregation
+### Destructuring Tuples
+
+The `name` parameter can be more than a string: Structures can be used to map names to structures.  Consider the case of function, `generate_series`, that returns an array of tuples; much like a table. You may consider each column and assign a name,
+
+    {
+        "select": [
+            {"value": {"get": ["s", 0]}, "name": "a"}
+            {"value": {"get": ["s", 1]}, "name": "b"}
+        ],
+        "from": {
+            "value": {"generate_series": {}},
+            "name": "s"
+        }
+    }
+
+or use destructuring to name all the columns:  
+
+    {
+        "select": [
+            {"value": "s" "name": ["a", "b"]}
+        ],
+        "from": {
+            "value": {"generate_series": {}},
+            "name": "s"
+        }
+    }
+
+
+you may also do this in the `from` clause 
+
+    {"from": {
+        "value": {"generate_series": {}},
+        "name": {"s": ["a", "b"]}
+    }}
+
+
+
+
+## Aggregation
 
 When a JSON query expressions includes a `groupby` or `edges` clause, the members of the `select` clause must include the `aggregate` property; which indicates what to do with the many possible values being assigned to the `name`.
