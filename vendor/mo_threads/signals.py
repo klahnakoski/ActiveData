@@ -13,20 +13,17 @@
 
 from __future__ import absolute_import, division, unicode_literals
 
-import random
 from weakref import ref
 
 from mo_future import allocate_lock as _allocate_lock, text
 from mo_logs import Log
 
 DEBUG = False
-DEBUG_SIGNAL = False
-SEED = random.Random()
 
 
 class Signal(object):
     """
-    SINGLE-USE THREAD SAFE SIGNAL
+    SINGLE-USE THREAD SAFE SIGNAL (aka EVENT)
 
     go() - ACTIVATE SIGNAL (DOES NOTHING IF SIGNAL IS ALREADY ACTIVATED)
     wait() - PUT THREAD IN WAIT STATE UNTIL SIGNAL IS ACTIVATED
@@ -36,7 +33,7 @@ class Signal(object):
     __slots__ = ["_name", "lock", "_go", "job_queue", "waiting_threads", "__weakref__"]
 
     def __init__(self, name=None):
-        (DEBUG and name) and Log.note("New signal {{name|quote}}", name=name)
+        DEBUG and name and Log.note("New signal {{name|quote}}", name=name)
         self._name = name
         self.lock = _allocate_lock()
         self._go = False
@@ -125,7 +122,7 @@ class Signal(object):
                     self.job_queue.append(target)
                 return
 
-        (DEBUG_SIGNAL) and Log.note(
+        DEBUG and Log.note(
             "Signal {{name|quote}} already triggered, running job immediately",
             name=self.name,
         )

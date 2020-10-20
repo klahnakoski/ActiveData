@@ -36,3 +36,4 @@ version.json
 /*.pid
 /.coverage
 /app_profile.csv
+/*.csv#

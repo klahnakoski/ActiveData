@@ -178,7 +178,8 @@ def execute_tuple_op(query, output, is_done):
 def worker(please_stop):
     while not please_stop:
         work = todo.pop(till=please_stop)
-        execute(*work)
+        if work:
+            execute(*work)
 
 
 threads = [Thread.run("query thread " + text(i), worker) for i in range(NUM_THREADS)]

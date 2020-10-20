@@ -9,19 +9,23 @@
 from __future__ import absolute_import, division, unicode_literals
 
 import cProfile
+import os
 import pstats
+import threading
+from _ssl import PROTOCOL_SSLv23
+from ssl import SSLContext
+from time import sleep
+
+import flask
+from flask import Flask, Response
+from werkzeug.serving import make_server
+
+from mo_kwargs import override
 
 PROFILE_IMPORT = True
 if PROFILE_IMPORT:
     cprofiler = cProfile.Profile()
     cprofiler.enable()
-
-import os
-from ssl import SSLContext
-import flask
-
-from _ssl import PROTOCOL_SSLv23
-from flask import Flask, Response
 
 import active_data
 from active_data import OVERVIEW, record_request
@@ -39,10 +43,11 @@ from mo_dots import is_data
 from mo_files import File, TempFile
 from mo_future import text
 from mo_logs import Log, constants, machine_metadata, startup
-from mo_threads import Thread, stop_main_thread
+from mo_threads import Thread, stop_main_thread, signals
 from mo_threads.threads import MAIN_THREAD, register_thread
 from mo_http import http
 from pyLibrary.env.flask_wrappers import cors_wrapper, dockerflow, add_version
+
 
 
 if PROFILE_IMPORT:
@@ -265,6 +270,25 @@ def _exit():
             Log.warning("werkzeug.server.shutdown does not exist")
 
 
+class ServerThread(threading.Thread):
+
+    def __init__(self, host, port, app, **kwargs):
+        threading.Thread.__init__(self)
+        self.srv = override(make_server)(host, port, app, **kwargs)
+        self.ctx = app.app_context()
+        self.ctx.push()
+
+    def run(self):
+        self.srv.serve_forever()
+        Log.note("shutdown of server on port {{port}}", port=self.srv.port)
+
+    def stop(self):
+        try:
+            self.srv.shutdown()
+        except Exception:
+            pass
+
+
 if __name__ in ("__main__", "active_data.app"):
     try:
         setup()
@@ -275,4 +299,7 @@ if __name__ in ("__main__", "active_data.app"):
         stop_main_thread()
 
     if config.flask:
-        flask_app.run(**config.flask)
+        server_thread = ServerThread(app=flask_app, **config.flask)
+        server_thread.start()
+        MAIN_THREAD.wait_for_shutdown_signal(allow_exit=True)
+        server_thread.stop()

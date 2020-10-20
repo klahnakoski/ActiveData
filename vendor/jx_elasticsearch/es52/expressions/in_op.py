@@ -26,6 +26,7 @@ from pyLibrary.convert import value2boolean
 
 class InOp(BaseInOp):
     def to_es(self, schema):
+        a = ((y)).x
         value = self.value
         if is_op(value, Variable):
             var = value.var
@@ -40,9 +41,11 @@ class InOp(BaseInOp):
                     if is_literal(self.superset) and not is_many(self.superset.value):
                         return {"term": {var: value2boolean(self.superset.value)}}
                     else:
-                        return {"terms": {var: list(map(
-                            value2boolean, self.superset.value
-                        ))}}
+                        return {
+                            "terms": {
+                                var: list(map(value2boolean, self.superset.value))
+                            }
+                        }
                 else:
                     if is_literal(self.superset) and not is_many(self.superset.value):
                         return {"term": {var: self.superset.value}}

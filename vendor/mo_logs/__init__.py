@@ -33,7 +33,7 @@ class Log(object):
     FOR STRUCTURED LOGGING AND EXCEPTION CHAINING
     """
     trace = False
-    main_log = None
+    main_log = StructuredLogger_usingStream(STDOUT)
     logging_multi = None
     profiler = None   # simple pypy-friendly profiler
     error_mode = False  # prevent error loops
@@ -442,8 +442,5 @@ export("mo_logs.startup", Log)
 export("mo_logs.log_usingFile", Log)
 export("mo_logs.log_usingMulti", Log)
 export("mo_logs.log_usingThread", Log)
-
-if not Log.main_log:
-    Log.main_log = StructuredLogger_usingStream(STDOUT)
 
 

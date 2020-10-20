@@ -92,7 +92,7 @@ class StructuredLogger_usingElasticSearch(StructuredLogger):
             try:
                 messages = to_data(self.queue.pop_all())
                 if not messages:
-                    Till(seconds=PAUSE_AFTER_GOOD_INSERT).wait()
+                    (Till(seconds=PAUSE_AFTER_GOOD_INSERT) | please_stop).wait()
                     continue
 
                 for g, mm in jx.chunk(messages, size=self.batch_size):
