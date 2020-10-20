@@ -115,7 +115,6 @@ def tail_field(field):
         return field, "."
 
 
-
 def split_field(field):
     """
     RETURN field AS ARRAY OF DOT-SEPARATED FIELDS

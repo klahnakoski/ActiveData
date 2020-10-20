@@ -26,7 +26,6 @@ from pyLibrary.convert import value2boolean
 
 class InOp(BaseInOp):
     def to_es(self, schema):
-        a = ((y)).x
         value = self.value
         if is_op(value, Variable):
             var = value.var
