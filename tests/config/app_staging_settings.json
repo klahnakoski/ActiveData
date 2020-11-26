@@ -24,8 +24,9 @@
 		"jx_elasticsearch.es52.agg_op.DEBUG": true
 	},
 	"bulk": {
+		"url": "https://testing-active-data-query-results.s3.us-east-2.amazonaws.com",
 		"s3": {
-			"bucket": "active-data-query-results",
+			"bucket": "testing-active-data-query-results",
 			"public": true,
 			"$ref": "file://~/private.json#aws_credentials"
 		}

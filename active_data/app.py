@@ -145,8 +145,8 @@ def setup():
     constants.set(config.constants)
     Log.start(config.debug)
 
-    if config.bulk.s3:
-        agg_bulk.S3_CONFIG = config.bulk.s3
+    if config.bulk:
+        agg_bulk.BULK_CONFIG = config.bulk
     else:
         Log.alert(
             "Bulk queries are disabled, add `bulk.s3` properties to config to enable"

@@ -400,42 +400,63 @@ The star can be used on the end of a path. The path is not flattened, but the st
 </td></tr></table>
 
 
-### Destructuring Tuples
+### Destructuring tuples
 
-The `name` parameter can be more than a string: Structures can be used to map names to structures.  Consider the case of function, `generate_series`, that returns an array of tuples; much like a table. You may consider each column and assign a name,
+The `name` parameter can be more than a string: Structures can be used to map names to structures.  Consider the case of function, `generate_tuples`, that returns an array of tuples; much like a table. You may consider each column and assign a name,
+
+    { # EMIT ONE COLUMN (s) WITH TWO PROPERTIES (a AND b) 
+        "select": [
+            {"value": {"get": [".", 0]}, "name": "s.a"}
+            {"value": {"get": [".", 1]}, "name": "s.b"}
+        ],
+        "from": {"generate_tuples": {}}
+    }
+
+or use destructuring to name the column and the properties it contains:  
 
     {
         "select": [
-            {"value": {"get": ["s", 0]}, "name": "a"}
-            {"value": {"get": ["s", 1]}, "name": "b"}
+            {"name": {"s: ["a", "b"]}}
         ],
+        "from": {"generate_tuples": {}}
+    }
+
+you may also use the `from` clause 
+
+    {
         "from": {
-            "value": {"generate_series": {}},
-            "name": "s"
+            "value": {"generate_tuples": {}},
+            "name": {"s": ["a", "b"]}
         }
+    }
+
+### Destructuring objects
+
+Consider the case of function, `generate_objects`, that returns an array of objects; much like a table with known column names. 
+
+    {
+        "select": [
+            {"value": "x", "name": "s.a"}
+            {"value": "y", "name": "s.b"}
+        ],
+        "from": {"generate_objects": {}}
     }
 
 or use destructuring to name all the columns:  
 
     {
         "select": [
-            {"value": "s" "name": ["a", "b"]}
+            {"name": {"s": {"a":"x", "b":"y"}}}
         ],
-        "from": {
-            "value": {"generate_series": {}},
-            "name": "s"
-        }
+        "from": {"generate_objects": {}}
     }
-
 
 you may also do this in the `from` clause 
 
     {"from": {
-        "value": {"generate_series": {}},
-        "name": {"s": ["a", "b"]}
+        "value": {"generate_objects": {}},
+        "name": {"s": {"a":"x", "b":"y"}}
     }}
-
-
 
 
 ## Aggregation

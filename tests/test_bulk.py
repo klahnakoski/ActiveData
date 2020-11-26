@@ -41,26 +41,22 @@ class TestBulk(BaseTestCase):
 
         return output
 
-    @skipIf(not agg_bulk.S3_CONFIG, "can not test S3")
+    @skipIf(not agg_bulk.BULK_CONFIG, "can not test S3")
     def test_bulk_aggs_list(self):
         data = list_to_data([{"a": "test" + text(i)} for i in range(10111)])
         expected = jx.sort([{"a": r.a, "count": 1} for r in data], "a")
 
-        test = to_data(
-            {
-                "data": data,
-                "query": {
-                    "from": TEST_TABLE,
-                    "groupby": "a",
-                    "limit": len(data),
-                    "chunk_size": 1000,
-                    "sort": "a",
-                },
-                "expecting_list": {
-                    "data": expected[:MAX_LIMIT]
-                },  # DUMMY, TO ENSURE LOADED
-            }
-        )
+        test = to_data({
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "groupby": "a",
+                "limit": len(data),
+                "chunk_size": 1000,
+                "sort": "a",
+            },
+            "expecting_list": {"data": expected[:MAX_LIMIT]},  # DUMMY, TO ENSURE LOADED
+        })
         self.utils.execute_tests(test)
 
         test.query.format = "list"
@@ -76,27 +72,23 @@ class TestBulk(BaseTestCase):
             sorted_expected = jx.sort(expected, "a")
             self.assertEqual(sorted_content, sorted_expected)
 
-    @skipIf(not agg_bulk.S3_CONFIG, "can not test S3")
+    @skipIf(not agg_bulk.BULK_CONFIG, "can not test S3")
     def test_bulk_aggs_list_no_records(self):
         data = list_to_data([{"a": "test" + text(i)} for i in range(10111)])
         expected = []
 
-        test = to_data(
-            {
-                "data": data,
-                "query": {
-                    "from": TEST_TABLE,
-                    "groupby": "a",
-                    "where": {"eq":{"a":"not exists"}},
-                    "limit": len(data),
-                    "chunk_size": 1000,
-                    "sort": "a",
-                },
-                "expecting_list": {
-                    "data": expected[:MAX_LIMIT]
-                },  # DUMMY, TO ENSURE LOADED
-            }
-        )
+        test = to_data({
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "groupby": "a",
+                "where": {"eq": {"a": "not exists"}},
+                "limit": len(data),
+                "chunk_size": 1000,
+                "sort": "a",
+            },
+            "expecting_list": {"data": expected[:MAX_LIMIT]},  # DUMMY, TO ENSURE LOADED
+        })
         self.utils.execute_tests(test)
 
         test.query.format = "list"
@@ -112,25 +104,21 @@ class TestBulk(BaseTestCase):
             sorted_expected = jx.sort(expected, "a")
             self.assertEqual(sorted_content, sorted_expected)
 
-    @skipIf(not agg_bulk.S3_CONFIG, "can not test S3")
+    @skipIf(not agg_bulk.BULK_CONFIG, "can not test S3")
     def test_scroll_query_list(self):
         data = list_to_data([{"a": "test" + text(i)} for i in range(10111)])
         expected = jx.sort(data, "a")
 
-        test = to_data(
-            {
-                "data": data,
-                "query": {
-                    "from": TEST_TABLE,
-                    "limit": len(data),
-                    "chunk_size": 10000,
-                    "sort": "a",
-                },
-                "expecting_list": {
-                    "data": expected[:MAX_LIMIT]
-                },  # DUMMY, TO ENSURE LOADED
-            }
-        )
+        test = to_data({
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "limit": len(data),
+                "chunk_size": 10000,
+                "sort": "a",
+            },
+            "expecting_list": {"data": expected[:MAX_LIMIT]},  # DUMMY, TO ENSURE LOADED
+        })
         self.utils.execute_tests(test)
 
         test.query.format = "list"
@@ -145,26 +133,22 @@ class TestBulk(BaseTestCase):
             sorted_content = jx.sort(content.data, "a")
             self.assertEqual(sorted_content, expected)
 
-    @skipIf(not agg_bulk.S3_CONFIG, "can not test S3")
+    @skipIf(not agg_bulk.BULK_CONFIG, "can not test S3")
     def test_bulk_aggs_table(self):
         data = list_to_data([{"a": "test" + text(i)} for i in range(10111)])
         expected = jx.sort([{"a": r.a, "count": 1} for r in data], "a")
 
-        test = to_data(
-            {
-                "data": data,
-                "query": {
-                    "from": TEST_TABLE,
-                    "groupby": "a",
-                    "limit": len(data),
-                    "chunk_size": 10000,
-                    "sort": "a",
-                },
-                "expecting_list": {
-                    "data": expected[:MAX_LIMIT]
-                },  # DUMMY, TO ENSURE LOADED
-            }
-        )
+        test = to_data({
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "groupby": "a",
+                "limit": len(data),
+                "chunk_size": 10000,
+                "sort": "a",
+            },
+            "expecting_list": {"data": expected[:MAX_LIMIT]},  # DUMMY, TO ENSURE LOADED
+        })
         self.utils.execute_tests(test)
 
         test.query.format = "table"
@@ -181,26 +165,22 @@ class TestBulk(BaseTestCase):
             sorted_expected = [(row.a, row.c) for row in expected]
             self.assertEqual(sorted_content, sorted_expected)
 
-    @skipIf(not agg_bulk.S3_CONFIG, "can not test S3")
+    @skipIf(not agg_bulk.BULK_CONFIG, "can not test S3")
     def test_scroll_query_table(self):
         data = list_to_data([{"a": "test" + text(i)} for i in range(10111)])
         expected = jx.sort(data, "a")
 
-        test = to_data(
-            {
-                "data": data,
-                "query": {
-                    "from": TEST_TABLE,
-                    "select": ["a"],
-                    "limit": len(data),
-                    "chunk_size": 10000,
-                    "sort": "a",
-                },
-                "expecting_list": {
-                    "data": expected[:MAX_LIMIT]
-                },  # DUMMY, TO ENSURE LOADED
-            }
-        )
+        test = to_data({
+            "data": data,
+            "query": {
+                "from": TEST_TABLE,
+                "select": ["a"],
+                "limit": len(data),
+                "chunk_size": 10000,
+                "sort": "a",
+            },
+            "expecting_list": {"data": expected[:MAX_LIMIT]},  # DUMMY, TO ENSURE LOADED
+        })
         self.utils.execute_tests(test)
 
         test.query.format = "table"
